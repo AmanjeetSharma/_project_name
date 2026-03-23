@@ -9,8 +9,8 @@ import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { getCookieOptions } from "../config/cookieOptions.js";
 import { generateAccessToken, generateRefreshToken, generateSessionId } from "../utils/token.js";
-import mongoose from "mongoose";
 import { getTimeDifference } from "../utils/getTimeDifference.js";
+import jwt from "jsonwebtoken";
 
 
 
@@ -20,7 +20,7 @@ import { getTimeDifference } from "../utils/getTimeDifference.js";
 
 
 
-export const register = asyncHandler(async (req, res) => {
+const register = asyncHandler(async (req, res) => {
     const { name, email, password } = req.body;
 
     if (!name || !email || !password) {
@@ -96,7 +96,7 @@ export const register = asyncHandler(async (req, res) => {
 
 
 
-export const verify = asyncHandler(async (req, res) => {
+const verify = asyncHandler(async (req, res) => {
     const { token } = req.params;
     const { device = "Email Verification" } = req.body;
 
@@ -127,7 +127,7 @@ export const verify = asyncHandler(async (req, res) => {
             email: pending.email,
             password: pending.password
         });
-    }   
+    }
 
     // creating session for login after email verification
     const sessionId = generateSessionId();
@@ -160,7 +160,7 @@ export const verify = asyncHandler(async (req, res) => {
                 new ApiResponse(
                     200,
                     { accessToken },
-                    "[Postman] Login successfull"
+                    "[Postman] Login successful"
                 )
             );
     }
@@ -180,7 +180,14 @@ export const verify = asyncHandler(async (req, res) => {
 
 
 
-export const login = asyncHandler(async (req, res) => {
+
+
+
+
+
+
+
+const login = asyncHandler(async (req, res) => {
     const { email, password, device = "Unknown Device" } = req.body;
 
     if (!email || !password) {
@@ -192,26 +199,52 @@ export const login = asyncHandler(async (req, res) => {
         throw new ApiError(404, "User doesn't exist");
     }
 
-    const isMatch = bcrypt.compare(password, user.password);
-    if (!isMatch) {
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
         throw new ApiError(401, "Invalid credentials");
     }
 
-    // Create session
-    const sessionId = generateSessionId();
-    const refreshToken = generateRefreshToken(user._id, sessionId);
-    const accessToken = generateAccessToken(user);
+    const existingSession = user.sessions.find(
+        (session) => session.device === device
+    );
 
-    user.sessions.push({
-        sessionId,
-        device,
-        refreshToken,
-        isActive: true
-    });
+    let sessionId;
+    let refreshToken;
+
+    if (existingSession) {
+        // reuse session
+        sessionId = existingSession.sessionId;
+        refreshToken = generateRefreshToken(user._id, sessionId);
+
+        existingSession.refreshToken = refreshToken;
+        existingSession.latestLogin = new Date();
+        existingSession.isActive = true;
+
+        console.log(`Session reused | Device: ${device}`);
+    } else {
+        // create new session
+        sessionId = generateSessionId();
+        refreshToken = generateRefreshToken(user._id, sessionId);
+
+        user.sessions.push({
+            sessionId,
+            device,
+            refreshToken,
+            firstLogin: new Date(),
+            latestLogin: new Date(),
+            isActive: true,
+        });
+
+        console.log(`New session created | Device: ${device}`);
+    }
+
+    const accessToken = generateAccessToken(user);
 
     await user.save();
 
     const cookieOptions = getCookieOptions();
+
+    const loggedInUser = await User.findById(user._id).select("-password -sessions -resetPasswordToken -resetPasswordExpiry");
 
     console.log(`User logged in | Email: ${user.email} | Device: ${device}`);
 
@@ -222,7 +255,7 @@ export const login = asyncHandler(async (req, res) => {
         .json(
             new ApiResponse(
                 200,
-                { accessToken },
+                { user: loggedInUser },
                 "Login successful"
             )
         );
@@ -235,7 +268,8 @@ export const login = asyncHandler(async (req, res) => {
 
 
 
-export const logout = asyncHandler(async (req, res) => {
+
+const logout = asyncHandler(async (req, res) => {
     const refreshToken = req.cookies?.refreshToken;
 
     if (!refreshToken) {
@@ -252,13 +286,14 @@ export const logout = asyncHandler(async (req, res) => {
     user.sessions = user.sessions.map((session) => {
         if (session.refreshToken === refreshToken) {
             session.isActive = false;
+            session.refreshToken = null; // Invalidate refresh token
         }
         return session;
     });
 
     await user.save();
 
-    console.log(`User logged out | Email: ${user.email}`);
+    console.log(`User logged out | Email: ${user.email} | Device: ${user.sessions.find(s => s.refreshToken === refreshToken)?.device || 'Unknown Device'}`);
 
     return res
         .clearCookie("accessToken")
@@ -275,10 +310,14 @@ export const logout = asyncHandler(async (req, res) => {
 
 
 
-export const logoutAll = asyncHandler(async (req, res) => {
+const logoutAll = asyncHandler(async (req, res) => {
     const user = await User.findById(req.user._id);
 
-    user.sessions.forEach((s) => (s.isActive = false));
+    user.sessions.forEach((s) => (
+        s.isActive = false,
+        s.refreshToken = null // Invalidate all refresh tokens
+    ));
+
     await user.save();
     console.log(`User logged out from all devices | Email: ${user.email}`);
 
@@ -295,18 +334,22 @@ export const logoutAll = asyncHandler(async (req, res) => {
 
 
 
-export const refresh = asyncHandler(async (req, res) => {
-    const token =
-        req.cookies?.refreshToken ||
-        req.header("Authorization")?.replace("Bearer ", "");
-        console.log("Refresh token received:", token); // Debug log
 
+
+
+const refresh = asyncHandler(async (req, res) => {
+    const token =
+        req.cookies?.refreshToken
+    console.log("Refresh token received:", token); // Debug log
+    console.log("TOKEN LENGTH:", token.length);
+    console.log("TOKEN LAST CHAR:", token[token.length - 1]);
     if (!token) {
         throw new ApiError(401, "No refresh token provided");
     }
-
+    console.log("------------------------- req reached this part  -------------------------");
     let decoded;
     try {
+        console.log(process.env.REFRESH_TOKEN_SECRET); // Debug log
         decoded = jwt.verify(token, process.env.REFRESH_TOKEN_SECRET);
     } catch {
         throw new ApiError(403, "Invalid or expired refresh token");
@@ -314,6 +357,7 @@ export const refresh = asyncHandler(async (req, res) => {
 
     const user = await User.findById(decoded.id);
     if (!user) {
+        console.log("User not found");
         throw new ApiError(404, "User not found");
     }
 
@@ -325,7 +369,8 @@ export const refresh = asyncHandler(async (req, res) => {
     );
 
     if (!session) {
-        throw new ApiError(403, "Invalid session");
+        console.log("❌ Invalid session or session is inactive");
+        throw new ApiError(403, "Invalid session or session is inactive");
     }
 
     // Update activity
@@ -347,3 +392,14 @@ export const refresh = asyncHandler(async (req, res) => {
             )
         );
 });
+
+
+
+export {
+    register,
+    verify,
+    login,
+    logout,
+    logoutAll,
+    refresh
+};
