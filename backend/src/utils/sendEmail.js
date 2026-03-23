@@ -32,7 +32,7 @@ const sendEmail = async (to, subject, content, isHtml = false) => {
         // 3. Send email
         const info = await transporter.sendMail(mailOptions);
 
-        console.log(`Email sent to ${to} | Message ID: ${info.messageId}`);
+        console.log(`📧  Email sent to ${to} | Subject: ${subject} | Message ID: ${info.messageId}`);
 
         return info;
     } catch (error) {

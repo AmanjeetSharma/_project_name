@@ -2,6 +2,7 @@ import crypto from "crypto";
 import bcrypt from "bcrypt";
 import sendEmail from "../utils/sendEmail.js";
 import registerEmail from "../utils/emailTemplates/registerEmail.js";
+import welcomeEmail from "../utils/emailTemplates/welcomeEmail.js";
 import { User } from "../models/user.model.js";
 import { PendingUser } from "../models/PendingUser.model.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
@@ -68,7 +69,7 @@ const register = asyncHandler(async (req, res) => {
 
     // await sendEmail(
     //     email,
-    //     "🎉 Welcome to CollegeFinder! Verify Your Email Address",
+    //     "Kindly Verify Your Email Address - Complete Your Registration",
     //     emailHTML,
     //     true
     // );
@@ -150,6 +151,14 @@ const verify = asyncHandler(async (req, res) => {
 
     console.log(`User verified and logged in via email verification | Email: ${user.email}`);
 
+    const welcomeHTML = welcomeEmail(user.name || user.email.split('@')[0]);
+    // await sendEmail(
+    //     user.email,
+    //     "Welcome to CollegeFinder! 🎓",
+    //     welcomeHTML,
+    //     true
+    // );
+
     // If Postman → return JSON
     if (req.headers["user-agent"]?.includes("Postman")) {
         return res
@@ -164,6 +173,16 @@ const verify = asyncHandler(async (req, res) => {
                 )
             );
     }
+
+    // Send welcome email for normal browser requests
+    // const welcomeHTML = welcomeEmail(user.name || user.email.split('@')[0]);
+    // await sendEmail(
+    //     user.email,
+    //     "Welcome to CollegeFinder! 🎓",
+    //     welcomeHTML,
+    //     true
+    // );
+
 
     const redirectUrl = user.role === "admin" ? `${process.env.CLIENT_URL}/admin` : `${process.env.CLIENT_URL}/dashboard`;
 
