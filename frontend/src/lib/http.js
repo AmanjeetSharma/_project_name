@@ -12,7 +12,9 @@ const skipRefreshEndpoints = [
     "/auth/refresh",
     "/auth/login",
     "/auth/register",
-    "/auth/verify"
+    "/auth/verify",
+    "/auth/logout",
+    "/auth/logout-all"
 ];
 
 axiosInstance.interceptors.response.use(

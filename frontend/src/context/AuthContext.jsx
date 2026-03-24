@@ -168,7 +168,7 @@ export const AuthProvider = ({ children }) => {
                 duration: 2000,
                 position: "top-center",
                 description: "Your session has been cleared from this device",
-            });
+            }); 
         } finally {
             setUser(null);
             localStorage.removeItem("backendReady");
