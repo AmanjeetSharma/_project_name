@@ -6,7 +6,7 @@ import {
     useCallback,
 } from "react";
 import { axiosInstance } from "../lib/http";
-import toast from "react-hot-toast";
+import { toast } from "sonner";
 
 const AuthContext = createContext(null);
 
@@ -59,20 +59,23 @@ export const AuthProvider = ({ children }) => {
                 password,
             });
 
-            toast.success(
-                data?.message || "Verification email sent!",
-                {
-                    duration: 4000,
-                    position: "top-center",
-                }
-            );
+            toast.success(data?.message || "Verification email sent!", {
+                duration: 4000,
+                position: "top-center",
+                description: "Please check your inbox to verify your account",
+                icon: "✉️",
+            });
 
             return data?.data;
         } catch (err) {
             const msg =
                 err?.response?.data?.message ||
                 "Registration failed. Try again.";
-            toast.error(msg, { duration: 4000 });
+            toast.error(msg, {
+                duration: 4000,
+                position: "top-center",
+                description: "Please check your information and try again",
+            });
             throw err;
         }
     };
@@ -82,22 +85,27 @@ export const AuthProvider = ({ children }) => {
     // ================================
     const verifyEmail = async (token) => {
         try {
-            const { data } = await axiosInstance.get(
+            const { data } = await axiosInstance.post(
                 `/auth/verify/${token}`
             );
 
-            toast.success(
-                data?.message ||
-                "Email verified successfully! Please login.",
-                { duration: 4000 }
-            );
+            toast.success(data?.message || "Email verified successfully!", {
+                duration: 5000,
+                position: "top-center",
+                description: "You can now login to your account",
+                icon: "✅",
+            });
 
             return true;
         } catch (err) {
             const msg =
                 err?.response?.data?.message ||
                 "Verification failed";
-            toast.error(msg);
+            toast.error(msg, {
+                duration: 4000,
+                position: "top-center",
+                description: "Please request a new verification link",
+            });
             throw err;
         }
     };
@@ -122,14 +130,23 @@ export const AuthProvider = ({ children }) => {
             setUser(userData);
             localStorage.setItem("backendReady", "true");
 
-            toast.success(data?.message || "Login successful");
+            toast.success(data?.message || "Welcome back!", {
+                duration: 3000,
+                position: "top-center",
+                description: `Logged in as ${userData.name || email}`,
+                icon: "👋",
+            });
 
             return userData;
         } catch (err) {
             const msg =
                 err?.response?.data?.message ||
                 "Invalid email or password";
-            toast.error(msg);
+            toast.error(msg, {
+                duration: 4000,
+                position: "top-center",
+                description: "Please check your credentials and try again",
+            });
             throw err;
         }
     };
@@ -140,13 +157,21 @@ export const AuthProvider = ({ children }) => {
     const logout = async () => {
         try {
             await axiosInstance.post("/auth/logout");
+            toast.success("Logged out successfully", {
+                duration: 2000,
+                position: "top-center",
+                icon: "👋",
+            });
         } catch (err) {
             console.warn("Logout API failed, clearing locally");
+            toast.warning("Logged out locally", {
+                duration: 2000,
+                position: "top-center",
+                description: "Your session has been cleared from this device",
+            });
         } finally {
             setUser(null);
             localStorage.removeItem("backendReady");
-
-            toast.success("Logged out successfully");
         }
     };
 
@@ -157,17 +182,24 @@ export const AuthProvider = ({ children }) => {
         try {
             const { data } = await axiosInstance.post("/auth/logout-all");
 
-            toast.success(
-                data?.message || "Logged out from all other devices"
-            );
+            toast.success(data?.message || "Logged out from all other devices", {
+                duration: 4000,
+                position: "top-center",
+                description: "All active sessions have been terminated",
+                icon: "🔒",
+            });
 
         } catch (err) {
             const msg =
                 err?.response?.data?.message ||
                 "Failed to logout from other devices";
 
-            toast.error(msg);
-            throw err; // important if caller needs it
+            toast.error(msg, {
+                duration: 4000,
+                position: "top-center",
+                description: "Please try again or contact support",
+            });
+            throw err;
         }
     };
 
@@ -175,11 +207,77 @@ export const AuthProvider = ({ children }) => {
     // 🔹 REFRESH TOKEN (OPTIONAL MANUAL)
     // ================================
     const refreshAuth = async () => {
+        toast.promise(
+            async () => {
+                try {
+                    await axiosInstance.post("/auth/refresh");
+                    await fetchProfile();
+                } catch (err) {
+                    throw err;
+                }
+            },
+            {
+                loading: "Refreshing session...",
+                success: "Session refreshed successfully",
+                error: "Failed to refresh session",
+                position: "top-center",
+                duration: 3000,
+            }
+        );
+    };
+
+    // ================================
+    // 🔹 RESET PASSWORD (Example of promise toast)
+    // ================================
+    const resetPassword = async (email) => {
+        toast.promise(
+            async () => {
+                const { data } = await axiosInstance.post("/auth/forgot-password", { email });
+                if (!data.success) throw new Error(data.message);
+                return data;
+            },
+            {
+                loading: "Sending reset link...",
+                success: (data) => ({
+                    message: data?.message || "Reset link sent!",
+                    description: `Check your email at ${email} for the reset link`,
+                    icon: "📧",
+                }),
+                error: (err) => ({
+                    message: err?.response?.data?.message || "Failed to send reset link",
+                    description: "Please check your email address and try again",
+                }),
+                position: "top-center",
+                duration: 5000,
+            }
+        );
+    };
+
+    // ================================
+    // 🔹 CHANGE PASSWORD (Example of info toast)
+    // ================================
+    const changePassword = async (oldPassword, newPassword) => {
         try {
-            await axiosInstance.post("/auth/refresh");
-            await fetchProfile();
+            await axiosInstance.post("/auth/change-password", {
+                oldPassword,
+                newPassword,
+            });
+
+            toast.info("Password changed successfully", {
+                duration: 3000,
+                position: "top-center",
+                description: "Your password has been updated. Please use your new password next login.",
+                icon: "🔐",
+            });
+
+            return true;
         } catch (err) {
-            logout();
+            toast.error(err?.response?.data?.message || "Failed to change password", {
+                duration: 4000,
+                position: "top-center",
+                description: "Please verify your current password and try again",
+            });
+            throw err;
         }
     };
 
@@ -197,6 +295,8 @@ export const AuthProvider = ({ children }) => {
         logoutAll,
         fetchProfile,
         refreshAuth,
+        resetPassword,
+        changePassword,
     };
 
     return (

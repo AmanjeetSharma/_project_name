@@ -5,7 +5,27 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, Eye, EyeOff, CheckCircle2, XCircle } from "lucide-react";
+import {
+    Loader2,
+    Eye,
+    EyeOff,
+    CheckCircle2,
+    XCircle,
+    Mail,
+    Clock,
+    Shield,
+    ArrowRight,
+    Sparkles
+} from "lucide-react";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export default function Register() {
     const [formData, setFormData] = useState({
@@ -20,6 +40,8 @@ export default function Register() {
         score: 0,
         message: ""
     });
+    const [showSuccessDialog, setShowSuccessDialog] = useState(false);
+    const [registeredEmail, setRegisteredEmail] = useState("");
     const { register } = useAuth();
     const navigate = useNavigate();
 
@@ -110,11 +132,11 @@ export default function Register() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        
+
         if (!validateForm()) {
             return;
         }
-        
+
         setLoading(true);
         try {
             // Only send name, email, password to backend
@@ -123,16 +145,23 @@ export default function Register() {
                 email: formData.email.trim().toLowerCase(),
                 password: formData.password
             };
-            
+
             await register(registerData);
-            // After successful registration, redirect to login
-            navigate("/login");
+            // Store the email for the dialog
+            setRegisteredEmail(formData.email.trim().toLowerCase());
+            // Show success dialog instead of redirecting
+            setShowSuccessDialog(true);
         } catch (error) {
             // Error already handled in register function
             console.error("Registration failed");
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleDialogClose = () => {
+        setShowSuccessDialog(false);
+        navigate("/login");
     };
 
     // Get password strength color
@@ -152,188 +181,270 @@ export default function Register() {
     };
 
     return (
-        <div className="min-h-screen flex flex-col items-center justify-between p-4 bg-slate-50">
-            <div className="w-full max-w-md flex-1 flex items-center">
-                <Card className="border shadow-lg w-full">
-                    <CardHeader className="text-center space-y-2 pt-8 pb-4">
-                        <CardTitle className="text-3xl font-bold">Create an Account</CardTitle>
-                        <CardDescription className="text-muted-foreground">
-                            Enter your details to create your account
-                        </CardDescription>
-                    </CardHeader>
-                    
-                    <form onSubmit={handleSubmit}>
-                        <CardContent className="space-y-5 px-6 pb-2">
-                            {/* Name Field */}
-                            <div className="space-y-2">
-                                <Label htmlFor="name">
-                                    Full Name <span className="text-destructive">*</span>
-                                </Label>
-                                <Input
-                                    id="name"
-                                    name="name"
-                                    type="text"
-                                    placeholder="Enter full name"
-                                    value={formData.name}
-                                    onChange={handleChange}
-                                    className={errors.name ? "border-destructive focus-visible:ring-destructive" : ""}
-                                    disabled={loading}
-                                    autoComplete="name"
-                                />
-                                {errors.name && (
-                                    <p className="text-sm text-destructive flex items-center gap-1">
-                                        <XCircle className="h-3 w-3" />
-                                        {errors.name}
-                                    </p>
-                                )}
-                            </div>
+        <>
+            <div className="min-h-screen flex flex-col items-center justify-between p-4 bg-gradient-to-br from-slate-50 via-white to-slate-50">
+                <div className="w-full max-w-md flex-1 flex items-center">
+                    <Card className="border shadow-2xl shadow-black/5 w-full relative overflow-hidden">
+                        {/* Premium accent line */}
+                        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 via-stone-600 to-amber-500" />
 
-                            {/* Email Field */}
-                            <div className="space-y-2">
-                                <Label htmlFor="email">
-                                    Email Address <span className="text-destructive">*</span>
-                                </Label>
-                                <Input
-                                    id="email"
-                                    name="email"
-                                    type="email"
-                                    placeholder="you@example.com"
-                                    value={formData.email}
-                                    onChange={handleChange}
-                                    className={errors.email ? "border-destructive focus-visible:ring-destructive" : ""}
-                                    disabled={loading}
-                                    autoComplete="email"
-                                />
-                                {errors.email && (
-                                    <p className="text-sm text-destructive flex items-center gap-1">
-                                        <XCircle className="h-3 w-3" />
-                                        {errors.email}
-                                    </p>
-                                )}
-                            </div>
+                        <CardHeader className="text-center space-y-2 pt-8 pb-4">
+                            <CardTitle className="text-3xl font-bold bg-gradient-to-r from-stone-800 to-stone-600 bg-clip-text text-transparent">
+                                Create an Account
+                            </CardTitle>
+                            <CardDescription className="text-muted-foreground">
+                                Join Schaden and experience premium service
+                            </CardDescription>
+                        </CardHeader>
 
-                            {/* Password Field */}
-                            <div className="space-y-2">
-                                <Label htmlFor="password">
-                                    Password <span className="text-destructive">*</span>
-                                </Label>
-                                <div className="relative">
+                        <form onSubmit={handleSubmit}>
+                            <CardContent className="space-y-5 px-6 pb-2">
+                                {/* Name Field */}
+                                <div className="space-y-2">
+                                    <Label htmlFor="name" className="text-stone-700">
+                                        Full Name <span className="text-destructive">*</span>
+                                    </Label>
                                     <Input
-                                        id="password"
-                                        name="password"
-                                        type={showPassword ? "text" : "password"}
-                                        placeholder="Enter your password"
-                                        value={formData.password}
+                                        id="name"
+                                        name="name"
+                                        type="text"
+                                        placeholder="Enter full name"
+                                        value={formData.name}
                                         onChange={handleChange}
-                                        className={errors.password ? "border-destructive focus-visible:ring-destructive pr-10" : "pr-10"}
+                                        className={`${errors.name ? "border-destructive focus-visible:ring-destructive" : "border-stone-200 focus:border-stone-400"} transition-all`}
                                         disabled={loading}
-                                        autoComplete="new-password"
+                                        autoComplete="name"
                                     />
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowPassword(!showPassword)}
-                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                                    >
-                                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                                    </button>
+                                    {errors.name && (
+                                        <p className="text-sm text-destructive flex items-center gap-1">
+                                            <XCircle className="h-3 w-3" />
+                                            {errors.name}
+                                        </p>
+                                    )}
                                 </div>
-                                
-                                {/* Password Requirements */}
-                                {formData.password && (
-                                    <div className="space-y-2 mt-2">
-                                        <div className="flex justify-between items-center text-xs">
-                                            <span className="text-muted-foreground">Password strength:</span>
-                                            <span className={`font-medium ${
-                                                passwordStrength.score <= 2 ? "text-red-500" :
-                                                passwordStrength.score <= 3 ? "text-orange-500" :
-                                                passwordStrength.score <= 4 ? "text-yellow-500" :
-                                                passwordStrength.score <= 5 ? "text-blue-500" :
-                                                "text-green-500"
-                                            }`}>
-                                                {passwordStrength.message}
-                                            </span>
+
+                                {/* Email Field */}
+                                <div className="space-y-2">
+                                    <Label htmlFor="email" className="text-stone-700">
+                                        Email Address <span className="text-destructive">*</span>
+                                    </Label>
+                                    <Input
+                                        id="email"
+                                        name="email"
+                                        type="email"
+                                        placeholder="you@example.com"
+                                        value={formData.email}
+                                        onChange={handleChange}
+                                        className={`${errors.email ? "border-destructive focus-visible:ring-destructive" : "border-stone-200 focus:border-stone-400"} transition-all`}
+                                        disabled={loading}
+                                        autoComplete="email"
+                                    />
+                                    {errors.email && (
+                                        <p className="text-sm text-destructive flex items-center gap-1">
+                                            <XCircle className="h-3 w-3" />
+                                            {errors.email}
+                                        </p>
+                                    )}
+                                </div>
+
+                                {/* Password Field */}
+                                <div className="space-y-2">
+                                    <Label htmlFor="password" className="text-stone-700">
+                                        Password <span className="text-destructive">*</span>
+                                    </Label>
+                                    <div className="relative">
+                                        <Input
+                                            id="password"
+                                            name="password"
+                                            type={showPassword ? "text" : "password"}
+                                            placeholder="Enter your password"
+                                            value={formData.password}
+                                            onChange={handleChange}
+                                            className={`${errors.password ? "border-destructive focus-visible:ring-destructive pr-10" : "border-stone-200 focus:border-stone-400 pr-10"} transition-all`}
+                                            disabled={loading}
+                                            autoComplete="new-password"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowPassword(!showPassword)}
+                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                                        >
+                                            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                        </button>
+                                    </div>
+
+                                    {/* Password Requirements */}
+                                    {formData.password && (
+                                        <div className="space-y-2 mt-2">
+                                            <div className="flex justify-between items-center text-xs">
+                                                <span className="text-muted-foreground">Password strength:</span>
+                                                <span className={`font-medium ${passwordStrength.score <= 2 ? "text-red-500" :
+                                                    passwordStrength.score <= 3 ? "text-orange-500" :
+                                                        passwordStrength.score <= 4 ? "text-yellow-500" :
+                                                            passwordStrength.score <= 5 ? "text-blue-500" :
+                                                                "text-green-500"
+                                                    }`}>
+                                                    {passwordStrength.message}
+                                                </span>
+                                            </div>
+                                            <div className="h-1.5 bg-secondary rounded-full overflow-hidden">
+                                                <div
+                                                    className={`h-full transition-all duration-300 ${getPasswordStrengthColor()}`}
+                                                    style={{ width: getPasswordStrengthWidth() }}
+                                                />
+                                            </div>
+                                            <ul className="text-xs space-y-1 mt-2">
+                                                <li className={`flex items-center gap-1 ${formData.password.length >= 8 ? "text-green-500" : "text-muted-foreground"}`}>
+                                                    {formData.password.length >= 8 ? <CheckCircle2 className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
+                                                    <span>At least 8 characters</span>
+                                                </li>
+                                                <li className={`flex items-center gap-1 ${/[A-Z]/.test(formData.password) ? "text-green-500" : "text-muted-foreground"}`}>
+                                                    {/[A-Z]/.test(formData.password) ? <CheckCircle2 className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
+                                                    <span>At least one uppercase letter</span>
+                                                </li>
+                                                <li className={`flex items-center gap-1 ${/[a-z]/.test(formData.password) ? "text-green-500" : "text-muted-foreground"}`}>
+                                                    {/[a-z]/.test(formData.password) ? <CheckCircle2 className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
+                                                    <span>At least one lowercase letter</span>
+                                                </li>
+                                                <li className={`flex items-center gap-1 ${/[0-9]/.test(formData.password) ? "text-green-500" : "text-muted-foreground"}`}>
+                                                    {/[0-9]/.test(formData.password) ? <CheckCircle2 className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
+                                                    <span>At least one number</span>
+                                                </li>
+                                                <li className={`flex items-center gap-1 ${/[^A-Za-z0-9]/.test(formData.password) ? "text-green-500" : "text-muted-foreground"}`}>
+                                                    {/[^A-Za-z0-9]/.test(formData.password) ? <CheckCircle2 className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
+                                                    <span>At least one special character (e.g., !@#$%^&*)</span>
+                                                </li>
+                                            </ul>
                                         </div>
-                                        <div className="h-1.5 bg-secondary rounded-full overflow-hidden">
-                                            <div 
-                                                className={`h-full transition-all duration-300 ${getPasswordStrengthColor()}`}
-                                                style={{ width: getPasswordStrengthWidth() }}
-                                            />
-                                        </div>
-                                        <ul className="text-xs space-y-1 mt-2">
-                                            <li className={`flex items-center gap-1 ${formData.password.length >= 8 ? "text-green-500" : "text-muted-foreground"}`}>
-                                                {formData.password.length >= 8 ? <CheckCircle2 className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
-                                                <span>At least 8 characters</span>
-                                            </li>
-                                            <li className={`flex items-center gap-1 ${/[A-Z]/.test(formData.password) ? "text-green-500" : "text-muted-foreground"}`}>
-                                                {/[A-Z]/.test(formData.password) ? <CheckCircle2 className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
-                                                <span>At least one uppercase letter</span>
-                                            </li>
-                                            <li className={`flex items-center gap-1 ${/[a-z]/.test(formData.password) ? "text-green-500" : "text-muted-foreground"}`}>
-                                                {/[a-z]/.test(formData.password) ? <CheckCircle2 className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
-                                                <span>At least one lowercase letter</span>
-                                            </li>
-                                            <li className={`flex items-center gap-1 ${/[0-9]/.test(formData.password) ? "text-green-500" : "text-muted-foreground"}`}>
-                                                {/[0-9]/.test(formData.password) ? <CheckCircle2 className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
-                                                <span>At least one number</span>
-                                            </li>
-                                            <li className={`flex items-center gap-1 ${/[^A-Za-z0-9]/.test(formData.password) ? "text-green-500" : "text-muted-foreground"}`}>
-                                                {/[^A-Za-z0-9]/.test(formData.password) ? <CheckCircle2 className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
-                                                <span>At least one special character (e.g., !@#$%^&*)</span>
+                                    )}
+                                    {errors.password && (
+                                        <p className="text-sm text-destructive flex items-center gap-1">
+                                            <XCircle className="h-3 w-3" />
+                                            {errors.password}
+                                        </p>
+                                    )}
+                                </div>
+                            </CardContent>
+
+                            <div className="px-6 pb-8 pt-4">
+                                <Button
+                                    type="submit"
+                                    className="w-full bg-stone-800 hover:bg-stone-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 group"
+                                    disabled={loading}
+                                    size="lg"
+                                >
+                                    {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                    {loading ? "Creating account..." : "Create Account"}
+                                    {!loading && <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />}
+                                </Button>
+
+                                <div className="text-center text-sm mt-6">
+                                    <span className="text-muted-foreground">Already have an account? </span>
+                                    <Link to="/login" className="text-stone-800 font-semibold hover:text-stone-600 hover:underline transition-colors">
+                                        Sign in
+                                    </Link>
+                                </div>
+                            </div>
+                        </form>
+
+                    </Card>
+                </div>
+
+                {/* Footer */}
+                <footer className="w-full py-6 text-center border-t mt-8">
+                    <div className="container mx-auto px-4">
+                        <p className="text-sm text-muted-foreground">
+                            &copy; {new Date().getFullYear()} Schaden. All rights reserved.
+                        </p>
+                        <div className="flex justify-center gap-4 mt-2">
+                            <Link to="/terms" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+                                Terms of Service
+                            </Link>
+                            <span className="text-muted-foreground text-xs">•</span>
+                            <Link to="/privacy" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+                                Privacy Policy
+                            </Link>
+                            <span className="text-muted-foreground text-xs">•</span>
+                            <Link to="/contact" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+                                Contact Us
+                            </Link>
+                        </div>
+                    </div>
+                </footer>
+            </div>
+
+            {/* Success Dialog */}
+            <AlertDialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
+                <AlertDialogContent className="max-w-md p-0 overflow-hidden">
+                    {/* Premium header gradient */}
+                    <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-gray-900 via-amber-500 to-gray-900" />
+
+                    <div className="p-6">
+                        <AlertDialogHeader className="text-center space-y-4">
+                            <div className="flex justify-center">
+                                <div className="w-20 h-20 rounded-full bg-gradient-to-br from-emerald-100 to-teal-100 flex items-center justify-center shadow-lg shadow-emerald-100">
+                                    <Mail className="h-10 w-10 text-emerald-600" strokeWidth={1.5} />
+                                </div>
+                            </div>
+                            <AlertDialogTitle className="text-2xl font-light tracking-tight">
+                                Welcome to CollegeFinder!
+                            </AlertDialogTitle>
+                            <AlertDialogDescription className="text-base">
+                                We've sent a verification email to{" "}
+                                <span className="font-semibold text-stone-800">{registeredEmail}</span>
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+
+                        <div className="mt-6 space-y-4">
+                            {/* Important info cards */}
+                            <div className="bg-gradient-to-br from-amber-50 to-stone-50 rounded-xl p-4 border border-amber-100">
+                                <div className="flex items-start gap-3">
+                                    <Clock className="h-5 w-5 text-amber-600 mt-0.5" />
+                                    <div className="flex-1">
+                                        {/* <p className="text-sm font-medium text-stone-800 mb-1">Verification Link Expires in 10 Minutes</p> */}
+                                        <p className="text-xs text-stone-600">Please verify your email within 10 mins to activate your account.</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl p-4 border border-emerald-100">
+                                <div className="flex items-start gap-3">
+                                    <Shield className="h-5 w-5 text-emerald-600 mt-0.5" />
+                                    <div className="flex-1">
+                                        <p className="text-sm font-medium text-stone-800 mb-1">What's Next?</p>
+                                        <ul className="text-xs text-stone-600 space-y-1">
+                                            <li className="flex items-center gap-2">
+                                                Check your inbox (and spam folder) for the verification email
                                             </li>
                                         </ul>
                                     </div>
-                                )}
-                                {errors.password && (
-                                    <p className="text-sm text-destructive flex items-center gap-1">
-                                        <XCircle className="h-3 w-3" />
-                                        {errors.password}
-                                    </p>
-                                )}
+                                </div>
                             </div>
-                        </CardContent>
 
-                        <div className="px-6 pb-8 pt-4">
-                            <Button 
-                                type="submit" 
-                                className="w-full" 
-                                disabled={loading}
-                            >
-                                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                {loading ? "Creating account..." : "Create Account"}
-                            </Button>
-                            
-                            <div className="text-center text-sm mt-6">
-                                <span className="text-muted-foreground">Already have an account? </span>
-                                <Link to="/login" className="text-primary font-semibold hover:underline">
-                                    Sign in
-                                </Link>
+                            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-100">
+                                <div className="flex items-start gap-3">
+                                    <Sparkles className="h-5 w-5 text-blue-600 mt-0.5" />
+                                    <div className="flex-1">
+                                        <p className="text-sm font-medium text-stone-800 mb-1">Pro Tip</p>
+                                        <p className="text-xs text-stone-600">- Never share your verification link with anyone</p>
+                                        <p className="text-xs text-stone-600">- Use a password manager to store your credentials safely</p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                    </form>
-                </Card>
-            </div>
 
-            {/* Footer */}
-            <footer className="w-full py-6 text-center border-t mt-8">
-                <div className="container mx-auto px-4">
-                    <p className="text-sm text-muted-foreground">
-                        &copy; {new Date().getFullYear()} Your Company Name. All rights reserved.
-                    </p>
-                    <div className="flex justify-center gap-4 mt-2">
-                        <Link to="/terms" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
-                            Terms of Service
-                        </Link>
-                        <span className="text-muted-foreground text-xs">•</span>
-                        <Link to="/privacy" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
-                            Privacy Policy
-                        </Link>
-                        <span className="text-muted-foreground text-xs">•</span>
-                        <Link to="/contact" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
-                            Contact Us
-                        </Link>
+                        <AlertDialogFooter className="mt-6">
+                            <AlertDialogAction
+                                onClick={handleDialogClose}
+                                className="w-full bg-stone-800 hover:bg-stone-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+                            >
+                                Continue to Login
+                                <ArrowRight className="ml-2 h-4 w-4" />
+                            </AlertDialogAction>
+                        </AlertDialogFooter>
                     </div>
-                </div>
-            </footer>
-        </div>
+                </AlertDialogContent>
+            </AlertDialog>
+        </>
     );
 }

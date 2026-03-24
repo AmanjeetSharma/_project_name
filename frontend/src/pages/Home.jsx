@@ -195,7 +195,7 @@ const Hero = () => {
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1, duration: 0.6 }}>
             <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-amber-400/30 bg-amber-400/8 text-amber-400 text-xs font-semibold tracking-widest uppercase mb-6">
               <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-              India's Smartest Career Advisor
+              One-Stop Personalized Career & Education Advisor
             </span>
           </motion.div>
 
@@ -681,7 +681,7 @@ const Home = () => {
       </div>
 
       {/* floating CTA */}
-      <FloatingActions />
+      {/* <FloatingActions /> */}
     </>
   );
 };

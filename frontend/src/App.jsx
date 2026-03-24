@@ -1,6 +1,6 @@
 // App.jsx
 import { BrowserRouter } from "react-router-dom";
-import { Toaster } from "react-hot-toast";
+import { Toaster } from "sonner";
 import { AuthProvider } from "./context/AuthContext";
 import { UserProvider } from "./context/UserContext";
 import AppRoutes from "./routes/AppRoutes";
@@ -20,29 +20,21 @@ function App() {
                             <AppRoutes />
                         </main>
                         <Toaster
+                            richColors
+                            closeButton
                             position="top-center"
+                            expand={false}
+                            visibleToasts={3}
                             toastOptions={{
-                                duration: 4000,
                                 style: {
-                                    background: '#363636',
-                                    color: '#fff',
-                                    borderRadius: '8px',
-                                    padding: '12px 16px',
+                                    background: "white",
+                                    border: "1px solid rgba(0, 0, 0, 0.05)",
+                                    borderRadius: "12px",
+                                    padding: "12px 16px",
+                                    fontFamily: "Inter, system-ui, sans-serif",
                                 },
-                                success: {
-                                    duration: 3000,
-                                    iconTheme: {
-                                        primary: '#10b981',
-                                        secondary: '#fff',
-                                    },
-                                },
-                                error: {
-                                    duration: 4000,
-                                    iconTheme: {
-                                        primary: '#ef4444',
-                                        secondary: '#fff',
-                                    },
-                                },
+                                className: "schaden-toast",
+                                duration: 4000,
                             }}
                         />
                     </div>

@@ -93,9 +93,19 @@ export default function About() {
                     Our goal is to reduce uncertainty, improve decision-making, and ensure that every student — regardless of background — has access to the right guidance at the right time.
                 </p>
 
-                <Button className="mt-8 rounded-2xl px-6 py-3 text-lg">
+                <Button className="mt-8 rounded-2xl px-6 py-4 text-lg">
                     Get Started
                 </Button>
+            </motion.div>
+
+            {/* Footer */}
+            <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.5, duration: 0.6 }}
+                className="mt-16 text-center text-sm text-muted-foreground"
+            >
+                &copy; {new Date().getFullYear()} Career & Education Advisor. All rights reserved.
             </motion.div>
         </div>
     );

@@ -257,23 +257,6 @@ export const welcomeEmail = (userName) => {
                             Your journey to finding the perfect college and career path starts now.
                         </div>
                         
-                        <div class="stats-box">
-                            <div class="stats-row">
-                                <div>
-                                    <div class="stats-number">5000+</div>
-                                    <div class="stats-label">Colleges Listed</div>
-                                </div>
-                                <div>
-                                    <div class="stats-number">1000+</div>
-                                    <div class="stats-label">Scholarships</div>
-                                </div>
-                                <div>
-                                    <div class="stats-number">50,000+</div>
-                                    <div class="stats-label">Happy Students</div>
-                                </div>
-                            </div>
-                        </div>
-                        
                         <div class="getting-started">
                             <div class="section-title">
                                 🚀 Get Started in 3 Easy Steps

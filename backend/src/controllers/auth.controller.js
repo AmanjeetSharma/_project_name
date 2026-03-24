@@ -73,6 +73,7 @@ const register = asyncHandler(async (req, res) => {
     //     emailHTML,
     //     true
     // );
+
     console.log(`Verification email sent to ${email} with link: ${verifyLink}`); // temporary log since email sending is disabled for testing
 
     return res.status(200).json(
@@ -135,6 +136,7 @@ const verifyEmail = asyncHandler(async (req, res) => {
     console.log(`Email verified | User: ${user.email} | ID: ${user._id}`);
 
     const welcomeHTML = welcomeEmail(user.name || user.email.split('@')[0]);
+    
     // await sendEmail(
     //     user.email,
     //     "Welcome to CollegeFinder! 🎓",
