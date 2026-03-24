@@ -12,27 +12,17 @@ import { User } from "../models/user.model.js";
 
 
 const getProfile = asyncHandler(async (req, res) => {
-    // req.user comes from verifyToken middleware
+    const user = await User.findById(req.user._id).select("-password -sessions");
+    // console.log("Fetching user profile for:", user);
+    if (!user) {
+        throw new ApiError(404, "User not found");
+    }
 
-    const safeUser = {
-        _id: req.user._id,
-        name: req.user.name,
-        email: req.user.email,
-        role: req.user.role,
-        address: req.user.address,
-        createdAt: req.user.createdAt,
-        updatedAt: req.user.updatedAt
-    };
+    console.log(`Profile fetched for: ${user.email} | ID: ${user._id}`);
 
-    console.log(`Profile fetched for: ${safeUser.email} | ID: ${safeUser._id}`);
-
-    return res.status(200).json(
-        new ApiResponse(
-            200,
-            safeUser,
-            "User profile fetched successfully"
-        )
-    );
+    return res
+        .status(200)
+        .json(new ApiResponse(200, user, "✅ User profile fetched successfully"));
 });
 
 

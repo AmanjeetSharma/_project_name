@@ -60,7 +60,7 @@ const register = asyncHandler(async (req, res) => {
         });
     }
 
-    console.log(`${existingPending ? 'Existing' : 'New'} user ${existingPending ? 'updated' : 'created'} for ${email} | Token ${token} (duration: 10 mins)`);
+    console.log(`${existingPending ? 'Existing' : 'New'} pendingUser ${existingPending ? 'updated' : 'created'} for ${email} | Token ${token} (duration: 10 mins)`);
 
     // 5. Send email
     const verifyLink = `${process.env.CLIENT_URL}/verify/${token}`;
@@ -99,13 +99,11 @@ const register = asyncHandler(async (req, res) => {
 
 const verifyEmail = asyncHandler(async (req, res) => {
     const { token } = req.params;
-    const { device = "Email Verification" } = req.body;
-    console.log(`Verification attempt | Token: ${token} | Device: ${device}`);
+    console.log(`Verification attempt | Token: ${token}`);
 
     const pending = await PendingUser.findOne({
-        verificationToken: token,
+        verificationToken: token, //no need to check expiry here, we will check it separately to provide better error messages
     });
-
 
     if (!pending) {
         throw new ApiError(400, "Invalid Token");
@@ -113,6 +111,7 @@ const verifyEmail = asyncHandler(async (req, res) => {
 
     if (pending.verificationTokenExpiry < Date.now()) {
         const timeInfo = getTimeDifference(pending.verificationTokenExpiry);
+        console.log(`❌ Token expired ${timeInfo} ago | Email: ${pending.email}`);
 
         throw new ApiError(
             400,
@@ -120,7 +119,7 @@ const verifyEmail = asyncHandler(async (req, res) => {
         );
     }
 
-    // Prevent duplicate user
+    // Prevent duplicate user (race condition)
     let user = await User.findOne({ email: pending.email });
 
     if (!user) {
@@ -131,26 +130,10 @@ const verifyEmail = asyncHandler(async (req, res) => {
         });
     }
 
-    // creating session for login after email verification
-    const sessionId = generateSessionId();
-    const refreshToken = generateRefreshToken(user._id, sessionId);
-    const accessToken = generateAccessToken(user);
-
-    user.sessions.push({
-        sessionId,
-        device: device,
-        refreshToken,
-        isActive: true
-    });
-
-    await user.save();
-
     // Delete pending user
     await PendingUser.deleteOne({ _id: pending._id });
 
-    const cookieOptions = getCookieOptions();
-
-    console.log(`User verified and logged in via email verification | Email: ${user.email}`);
+    console.log(`Email verified | User: ${user.email} | ID: ${user._id}`);
 
     const welcomeHTML = welcomeEmail(user.name || user.email.split('@')[0]);
     // await sendEmail(
@@ -160,42 +143,13 @@ const verifyEmail = asyncHandler(async (req, res) => {
     //     true
     // );
 
-    // If Postman → return JSON
-    if (req.headers["user-agent"]?.includes("Postman")) {
-        return res
-            .status(200)
-            .cookie("accessToken", accessToken, cookieOptions)
-            .cookie("refreshToken", refreshToken, cookieOptions)
-            .json(
-                new ApiResponse(
-                    200,
-                    { accessToken },
-                    "[Postman] Login successful"
-                )
-            );
-    }
-
-    // Send welcome email for normal browser requests
-    // const welcomeHTML = welcomeEmail(user.name || user.email.split('@')[0]);
-    // await sendEmail(
-    //     user.email,
-    //     "Welcome to CollegeFinder! 🎓",
-    //     welcomeHTML,
-    //     true
-    // );
-
-
-    const redirectUrl = user.role === "admin" ? `${process.env.CLIENT_URL}/admin` : `${process.env.CLIENT_URL}/dashboard`;
-
-    // Redirect as logged-in user for normal browser requests
     return res
-        .cookie("accessToken", accessToken, cookieOptions)
-        .cookie("refreshToken", refreshToken, cookieOptions)
+        .status(200)
         .json(
             new ApiResponse(
                 200,
                 null,
-                "Email verified successfully! Redirecting to dashboard..."
+                "Email verified successfully!\nYou can login now."
             )
         );
 });
@@ -366,15 +320,16 @@ const logoutAll = asyncHandler(async (req, res) => {
 const refresh = asyncHandler(async (req, res) => {
     const token =
         req.cookies?.refreshToken
-    console.log("Refresh token received:", token); // Debug log
+    // console.log("Refresh token received:", token); // Debug log
+
     if (!token) {
         throw new ApiError(401, "No refresh token provided");
     }
     let decoded;
     try {
-        console.log(process.env.REFRESH_TOKEN_SECRET); // Debug log
+        // console.log(process.env.REFRESH_TOKEN_SECRET); // Debug log
         decoded = jwt.verify(token, process.env.REFRESH_TOKEN_SECRET);
-    } catch {
+    } catch (err) {
         throw new ApiError(403, "Invalid or expired refresh token");
     }
 

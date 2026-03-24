@@ -1,5 +1,10 @@
-// context/AuthContext.jsx
-import { createContext, useContext, useEffect, useState, useCallback } from "react";
+import {
+    createContext,
+    useContext,
+    useEffect,
+    useState,
+    useCallback,
+} from "react";
 import { axiosInstance } from "../lib/http";
 import toast from "react-hot-toast";
 
@@ -8,21 +13,27 @@ const AuthContext = createContext(null);
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-    // Fetch current user profile
+    const isAuthenticated = Boolean(user?._id);
+
+    // ================================
+    // 🔹 FETCH PROFILE
+    // ================================
     const fetchProfile = useCallback(async () => {
         try {
             const { data } = await axiosInstance.get("/user/profile");
-            const userData = data?.data?.user;
-            setUser(userData);
-            setIsAuthenticated(true);
-            localStorage.setItem("backendReady", "true");
-            return userData;
+
+            const userData = data?.data;
+
+            if (userData) {
+                setUser(userData);
+                localStorage.setItem("backendReady", "true");
+                return userData;
+            }
+
+            throw new Error("No user data");
         } catch (err) {
-            console.error("❌ Fetch profile error:", err);
             setUser(null);
-            setIsAuthenticated(false);
             localStorage.removeItem("backendReady");
             return null;
         } finally {
@@ -30,195 +41,169 @@ export const AuthProvider = ({ children }) => {
         }
     }, []);
 
-    // Check auth on mount
+    // ================================
+    // 🔹 INITIAL LOAD (NO FLICKER FIX)
+    // ================================
     useEffect(() => {
         fetchProfile();
     }, [fetchProfile]);
 
-    // Listen for auth logout events
-    useEffect(() => {
-        const handleAuthLogout = () => {
-            setUser(null);
-            setIsAuthenticated(false);
-            setLoading(false);
-        };
-
-        window.addEventListener("auth:logout", handleAuthLogout);
-        return () => window.removeEventListener("auth:logout", handleAuthLogout);
-    }, []);
-
-    // Register user
-    const register = async (formData) => {
+    // ================================
+    // 🔹 REGISTER
+    // ================================
+    const register = async ({ name, email, password }) => {
         try {
-            if (!formData.name || !formData.email || !formData.password) {
-                throw new Error("All fields are required");
-            }
-
-            const response = await axiosInstance.post("/auth/register", {
-                name: formData.name,
-                email: formData.email,
-                password: formData.password
+            const { data } = await axiosInstance.post("/auth/register", {
+                name,
+                email,
+                password,
             });
 
-            toast.success(response.data?.message || "Verification email sent! Please check your inbox.", {
-                duration: 5000,
-                position: "top-center",
-                icon: '✉️'
-            });
+            toast.success(
+                data?.message || "Verification email sent!",
+                {
+                    duration: 4000,
+                    position: "top-center",
+                }
+            );
 
-            return response.data;
+            return data?.data;
         } catch (err) {
-            console.error("❌ Register error:", err);
-
-            let errorMessage = "Registration failed. Please try again.";
-
-            if (err.response?.data?.message) {
-                errorMessage = err.response.data.message;
-            } else if (err.response?.data?.error) {
-                errorMessage = err.response.data.error;
-            } else if (err.message) {
-                errorMessage = err.message;
-            }
-
-            toast.error(errorMessage, {
-                duration: 4000,
-                position: "top-center"
-            });
-
+            const msg =
+                err?.response?.data?.message ||
+                "Registration failed. Try again.";
+            toast.error(msg, { duration: 4000 });
             throw err;
         }
     };
 
-    // Login user
-    const login = async (email, password, device = "unknown") => {
+    // ================================
+    // 🔹 VERIFY EMAIL
+    // ================================
+    const verifyEmail = async (token) => {
+        try {
+            const { data } = await axiosInstance.get(
+                `/auth/verify/${token}`
+            );
+
+            toast.success(
+                data?.message ||
+                "Email verified successfully! Please login.",
+                { duration: 4000 }
+            );
+
+            return true;
+        } catch (err) {
+            const msg =
+                err?.response?.data?.message ||
+                "Verification failed";
+            toast.error(msg);
+            throw err;
+        }
+    };
+
+    // ================================
+    // 🔹 LOGIN
+    // ================================
+    const login = async (email, password, device = "web") => {
         try {
             const { data } = await axiosInstance.post("/auth/login", {
                 email,
                 password,
-                device
+                device,
             });
 
             const userData = data?.data?.user;
-            setUser(userData);
-            setIsAuthenticated(true);
 
-            toast.success(data?.message || "Login successful!", {
-                duration: 3000,
-                position: "top-center"
-            });
+            if (!userData) {
+                throw new Error("Invalid login response");
+            }
+
+            setUser(userData);
+            localStorage.setItem("backendReady", "true");
+
+            toast.success(data?.message || "Login successful");
 
             return userData;
         } catch (err) {
-            console.error("❌ Login error:", err);
-            const msg = err?.response?.data?.message || "Login failed. Please check your credentials.";
-            toast.error(msg, {
-                duration: 4000,
-                position: "top-center"
-            });
+            const msg =
+                err?.response?.data?.message ||
+                "Invalid email or password";
+            toast.error(msg);
             throw err;
         }
     };
 
-    // Verify email token
-    const verifyEmail = async (token, device = "web") => {
-        try {
-            const formData = new URLSearchParams();
-            formData.append("device", device);
-
-            const { data } = await axiosInstance.post(`/auth/verify/${token}`, formData, {
-                headers: {
-                    "Content-Type": "application/x-www-form-urlencoded"
-                }
-            });
-
-            // After verification, fetch user profile
-            await fetchProfile();
-
-            toast.success(data?.message || "Email verified successfully! Welcome aboard!", {
-                duration: 3000,
-                position: "top-center"
-            });
-
-            return data;
-        } catch (err) {
-            console.error("❌ Verification error:", err);
-
-            let errorMessage = "Verification failed. Please try again.";
-
-            if (err.response?.data?.message) {
-                errorMessage = err.response.data.message;
-            }
-
-            toast.error(errorMessage, {
-                duration: 4000,
-                position: "top-center"
-            });
-
-            throw err;
-        }
-    };
-
-    // Logout user (current session)
+    // ================================
+    // 🔹 LOGOUT (CURRENT DEVICE)
+    // ================================
     const logout = async () => {
         try {
             await axiosInstance.post("/auth/logout");
-            setUser(null);
-            setIsAuthenticated(false);
-            localStorage.removeItem("backendReady");
-            toast.success("Logged out successfully!", {
-                duration: 3000,
-                position: "top-center"
-            });
         } catch (err) {
-            console.error("❌ Logout error:", err);
+            console.warn("Logout API failed, clearing locally");
+        } finally {
             setUser(null);
-            setIsAuthenticated(false);
             localStorage.removeItem("backendReady");
-            toast.error("Logged out locally.", {
-                duration: 3000,
-                position: "top-center"
-            });
+
+            toast.success("Logged out successfully");
         }
     };
 
-    // Logout from all devices
+    // ================================
+    // 🔹 LOGOUT ALL DEVICES
+    // ================================
     const logoutAll = async () => {
         try {
             await axiosInstance.post("/auth/logout-all");
-            setUser(null);
-            setIsAuthenticated(false);
-            localStorage.removeItem("backendReady");
-            toast.success("Logged out from all devices!", {
-                duration: 3000,
-                position: "top-center"
-            });
+
+            toast.success("Logged out from all devices");
         } catch (err) {
-            console.error("❌ Logout all error:", err);
+            toast.error("Failed to logout from all devices");
+        } finally {
             setUser(null);
-            setIsAuthenticated(false);
             localStorage.removeItem("backendReady");
-            toast.error("Error logging out from all devices.", {
-                duration: 3000,
-                position: "top-center"
-            });
         }
     };
 
+    // ================================
+    // 🔹 REFRESH TOKEN (OPTIONAL MANUAL)
+    // ================================
+    const refreshAuth = async () => {
+        try {
+            await axiosInstance.post("/auth/refresh");
+            await fetchProfile();
+        } catch (err) {
+            logout();
+        }
+    };
+
+    // ================================
+    // 🔹 VALUE
+    // ================================
     const value = {
         user,
         loading,
         isAuthenticated,
         register,
-        login,
         verifyEmail,
+        login,
         logout,
         logoutAll,
         fetchProfile,
+        refreshAuth,
     };
 
-    return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+    return (
+        <AuthContext.Provider value={value}>
+            {children}
+        </AuthContext.Provider>
+    );
 };
 
+// ================================
+// 🔹 HOOK
+// ================================
 export const useAuth = () => {
     const context = useContext(AuthContext);
     if (!context) {

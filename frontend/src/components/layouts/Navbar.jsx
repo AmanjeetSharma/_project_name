@@ -15,7 +15,7 @@ import {
 import { Menu, X, LogOut, User, Settings, Shield, ChevronDown, GraduationCap } from "lucide-react";
 
 const Navbar = () => {
-    const { user, isAuthenticated, loading, logout } = useAuth();
+    const { user, isAuthenticated, loading, logout, fetchProfile } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -54,7 +54,7 @@ const Navbar = () => {
 
     const isActive = (path) => location.pathname === path;
 
-    // Show minimal loading state
+    // Show loading state
     if (loading) {
         return (
             <nav className="sticky top-0 z-50 bg-white border-b border-gray-100">
@@ -96,8 +96,8 @@ const Navbar = () => {
                                 key={link.path}
                                 to={link.path}
                                 className={`text-sm font-medium transition-colors ${isActive(link.path)
-                                        ? "text-gray-900 border-b-2 border-gray-900"
-                                        : "text-gray-500 hover:text-gray-900"
+                                    ? "text-gray-900 border-b-2 border-gray-900"
+                                    : "text-gray-500 hover:text-gray-900"
                                     }`}
                             >
                                 {link.name}
@@ -202,8 +202,8 @@ const Navbar = () => {
                                     to={link.path}
                                     onClick={() => setIsMobileMenuOpen(false)}
                                     className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${isActive(link.path)
-                                            ? "bg-gray-100 text-gray-900"
-                                            : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                                        ? "bg-gray-100 text-gray-900"
+                                        : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                                         }`}
                                 >
                                     {link.name}
