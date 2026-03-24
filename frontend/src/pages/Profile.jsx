@@ -131,8 +131,8 @@ const Profile = () => {
                     animate={{ opacity: 1, y: 0 }}
                     className="mb-4 sm:mb-6 md:mb-8"
                 >
-                    {/* Mobile Back Button */}
-                    <div className="flex items-center justify-between mb-3 sm:mb-4">
+                    {/* Mobile Back Button and Actions Row */}
+                    <div className="flex items-center justify-between gap-2 mb-3 sm:mb-4">
                         <Button
                             variant="ghost"
                             onClick={() => navigate('/dashboard')}
@@ -151,19 +151,29 @@ const Profile = () => {
                             ← Back to Dashboard
                         </Button>
 
-                        {/* Mobile Edit Button */}
-                        <Button
-                            onClick={() => setIsEditing(!isEditing)}
-                            variant={isEditing ? "destructive" : "default"}
-                            size="sm"
-                            className={`sm:hidden ${!isEditing ? "bg-gray-900 hover:bg-gray-800" : ""}`}
-                        >
-                            {isEditing ? (
-                                <GoXCircle className="h-4 w-4" />
-                            ) : (
-                                <Edit2 className="h-4 w-4" />
-                            )}
-                        </Button>
+                        {/* Mobile Action Buttons */}
+                        <div className="flex items-center gap-2 sm:hidden">
+                            <Button
+                                onClick={() => setChangePasswordDialogOpen(true)}
+                                variant="outline"
+                                size="sm"
+                                className="border-gray-300 hover:bg-gray-50"
+                            >
+                                <Key className="h-4 w-4" />
+                            </Button>
+                            <Button
+                                onClick={() => setIsEditing(!isEditing)}
+                                variant={isEditing ? "destructive" : "default"}
+                                size="sm"
+                                className={!isEditing ? "bg-gray-900 hover:bg-gray-800" : ""}
+                            >
+                                {isEditing ? (
+                                    <GoXCircle className="h-4 w-4" />
+                                ) : (
+                                    <Edit2 className="h-4 w-4" />
+                                )}
+                            </Button>
+                        </div>
                     </div>
 
                     {/* Desktop Header */}
@@ -204,7 +214,7 @@ const Profile = () => {
                     </div>
 
                     {/* Mobile Header Text */}
-                    <div className="sm:hidden text-center">
+                    <div className="sm:hidden text-center mt-2">
                         <h1 className="text-xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
                             My Profile
                         </h1>
