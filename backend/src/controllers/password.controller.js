@@ -135,8 +135,7 @@ const forgotPassword = asyncHandler(async (req, res) => {
     //     emailHTML,
     //     true
     // );
-    console.log(`Reset token for ${user.email}: ${resetToken}`); // log the reset token for testing since email sending is disabled
-    console.log(`Password reset link sent to ${user.email}`);// as its logged in sendEmail.js
+    console.log(`Reset link generated for ${user.email}: ${resetLink}`); // log the reset link for testing since email sending is disabled
 
     return res.status(200).json(
         new ApiResponse(200, null, "If this email exists, a reset link has been sent")

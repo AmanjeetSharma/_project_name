@@ -1,6 +1,6 @@
 import { createContext, useContext, useState } from "react";
 import { axiosInstance } from "../lib/http";
-import toast from "react-hot-toast";
+import { schadenToast } from "../components/schadenToast/toast-config";
 
 const PasswordContext = createContext(null);
 
@@ -27,9 +27,15 @@ export const PasswordProvider = ({ children }) => {
                 }
             );
 
-            toast.success(
+            schadenToast.success(
                 data?.message ||
-                "Password changed successfully. Please login again."
+                "Password changed successfully. Please login again.",
+                {
+                    duration: 4000,
+                    position: "top-center",
+                    description: "You will be redirected to login",
+                    icon: "🔐",
+                }
             );
 
             return true;
@@ -37,7 +43,11 @@ export const PasswordProvider = ({ children }) => {
             const msg =
                 err?.response?.data?.message ||
                 "Failed to change password";
-            toast.error(msg);
+            schadenToast.error(msg, {
+                duration: 4000,
+                position: "top-center",
+                description: "Please check your current password and try again",
+            });
             throw err;
         } finally {
             setLoading(false);
@@ -47,32 +57,42 @@ export const PasswordProvider = ({ children }) => {
     // ================================
     // 🔹 FORGOT PASSWORD
     // ================================
-    const forgotPassword = async (email) => {
-        setLoading(true);
+        const forgotPassword = async (email) => {
+            setLoading(true);
 
-        try {
-            const { data } = await axiosInstance.post(
-                "/password/forgot-password",
-                { email }
-            );
+            try {
+                const { data } = await axiosInstance.post(
+                    "/password/forgot-password",
+                    { email }
+                );
 
-            // ⚠️ Always generic message (security)
-            toast.success(
-                data?.message ||
-                "If this email exists, a reset link has been sent"
-            );
+                // ⚠️ Always generic message (security)
+                schadenToast.success(
+                    data?.message ||
+                    "If this email exists, a reset link has been sent",
+                    {
+                        duration: 5000,
+                        position: "top-center",
+                        description: "Please check your inbox and spam folder",
+                        icon: "📧",
+                    }
+                );
 
-            return true;
-        } catch (err) {
-            const msg =
-                err?.response?.data?.message ||
-                "Something went wrong";
-            toast.error(msg);
-            throw err;
-        } finally {
-            setLoading(false);
-        }
-    };
+                return true;
+            } catch (err) {
+                const msg =
+                    err?.response?.data?.message ||
+                    "Something went wrong";
+                schadenToast.error(msg, {
+                    duration: 4000,
+                    position: "top-center",
+                    description: "Please try again or contact support",
+                });
+                throw err;
+            } finally {
+                setLoading(false);
+            }
+        };
 
     // ================================
     // 🔹 RESET PASSWORD
@@ -94,9 +114,15 @@ export const PasswordProvider = ({ children }) => {
                 }
             );
 
-            toast.success(
+            schadenToast.success(
                 data?.message ||
-                "Password reset successful. Please login."
+                "Password reset successful. Please login.",
+                {
+                    duration: 4000,
+                    position: "top-center",
+                    description: "You can now login with your new password",
+                    icon: "✅",
+                }
             );
 
             return true;
@@ -104,7 +130,11 @@ export const PasswordProvider = ({ children }) => {
             const msg =
                 err?.response?.data?.message ||
                 "Password reset failed";
-            toast.error(msg);
+            schadenToast.error(msg, {
+                duration: 4000,
+                position: "top-center",
+                description: "The reset link may have expired or is invalid",
+            });
             throw err;
         } finally {
             setLoading(false);

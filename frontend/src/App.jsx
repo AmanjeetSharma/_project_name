@@ -3,6 +3,7 @@ import { BrowserRouter } from "react-router-dom";
 import { Toaster } from "sonner";
 import { AuthProvider } from "./context/AuthContext";
 import { UserProvider } from "./context/UserContext";
+import { PasswordProvider } from "./context/PasswordContext";
 import AppRoutes from "./routes/AppRoutes";
 import Navbar from "./components/layouts/Navbar";
 import ScrollToTop from "./components/layouts/ScrollToTop";
@@ -14,30 +15,25 @@ function App() {
             <ScrollToTop />
             <AuthProvider>
                 <UserProvider>
+                    <PasswordProvider>
                     <div className="min-h-screen bg-gray-50">
                         <Navbar />
                         <main>
                             <AppRoutes />
                         </main>
                         <Toaster
-                            richColors
+                            richColors={false}
                             closeButton
                             position="top-center"
                             expand={false}
                             visibleToasts={3}
                             toastOptions={{
-                                style: {
-                                    background: "white",
-                                    border: "1px solid rgba(0, 0, 0, 0.05)",
-                                    borderRadius: "12px",
-                                    padding: "12px 16px",
-                                    fontFamily: "Inter, system-ui, sans-serif",
-                                },
                                 className: "schaden-toast",
                                 duration: 4000,
                             }}
                         />
                     </div>
+                    </PasswordProvider>
                 </UserProvider>
             </AuthProvider>
         </BrowserRouter>

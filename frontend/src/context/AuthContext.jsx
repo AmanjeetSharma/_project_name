@@ -6,7 +6,7 @@ import {
     useCallback,
 } from "react";
 import { axiosInstance } from "../lib/http";
-import { toast } from "sonner";
+import { schadenToast } from "@/components/schadenToast/toast-config";
 
 const AuthContext = createContext(null);
 
@@ -59,7 +59,7 @@ export const AuthProvider = ({ children }) => {
                 password,
             });
 
-            toast.success(data?.message || "Verification email sent!", {
+            schadenToast.success(data?.message || "Verification email sent!", {
                 duration: 4000,
                 position: "top-center",
                 description: "Please check your inbox to verify your account",
@@ -71,7 +71,7 @@ export const AuthProvider = ({ children }) => {
             const msg =
                 err?.response?.data?.message ||
                 "Registration failed. Try again.";
-            toast.error(msg, {
+            schadenToast.error(msg, {
                 duration: 4000,
                 position: "top-center",
                 description: "Please check your information and try again",
@@ -89,7 +89,7 @@ export const AuthProvider = ({ children }) => {
                 `/auth/verify/${token}`
             );
 
-            toast.success(data?.message || "Email verified successfully!", {
+            schadenToast.success(data?.message || "Email verified successfully!", {
                 duration: 5000,
                 position: "top-center",
                 description: "You can now login to your account",
@@ -101,7 +101,7 @@ export const AuthProvider = ({ children }) => {
             const msg =
                 err?.response?.data?.message ||
                 "Verification failed";
-            toast.error(msg, {
+            schadenToast.error(msg, {
                 duration: 4000,
                 position: "top-center",
                 description: "Please request a new verification link",
@@ -130,7 +130,7 @@ export const AuthProvider = ({ children }) => {
             setUser(userData);
             localStorage.setItem("backendReady", "true");
 
-            toast.success(data?.message || "Welcome back!", {
+            schadenToast.success(data?.message || "Welcome back!", {
                 duration: 3000,
                 position: "top-center",
                 description: `Logged in as ${userData.name || email}`,
@@ -142,7 +142,7 @@ export const AuthProvider = ({ children }) => {
             const msg =
                 err?.response?.data?.message ||
                 "Invalid email or password";
-            toast.error(msg, {
+            schadenToast.error(msg, {
                 duration: 4000,
                 position: "top-center",
                 description: "Please check your credentials and try again",
@@ -157,18 +157,18 @@ export const AuthProvider = ({ children }) => {
     const logout = async () => {
         try {
             await axiosInstance.post("/auth/logout");
-            toast.success("Logged out successfully", {
+            schadenToast.success("Logged out successfully", {
                 duration: 2000,
                 position: "top-center",
                 icon: "👋",
             });
         } catch (err) {
             console.warn("Logout API failed, clearing locally");
-            toast.warning("Logged out locally", {
+            schadenToast.warning("Logged out locally", {
                 duration: 2000,
                 position: "top-center",
                 description: "Your session has been cleared from this device",
-            }); 
+            });
         } finally {
             setUser(null);
             localStorage.removeItem("backendReady");
@@ -182,7 +182,7 @@ export const AuthProvider = ({ children }) => {
         try {
             const { data } = await axiosInstance.post("/auth/logout-all");
 
-            toast.success(data?.message || "Logged out from all other devices", {
+            schadenToast.success(data?.message || "Logged out from all other devices", {
                 duration: 4000,
                 position: "top-center",
                 description: "All active sessions have been terminated",
@@ -194,7 +194,7 @@ export const AuthProvider = ({ children }) => {
                 err?.response?.data?.message ||
                 "Failed to logout from other devices";
 
-            toast.error(msg, {
+            schadenToast.error(msg, {
                 duration: 4000,
                 position: "top-center",
                 description: "Please try again or contact support",
@@ -207,7 +207,7 @@ export const AuthProvider = ({ children }) => {
     // 🔹 REFRESH TOKEN (OPTIONAL MANUAL)
     // ================================
     const refreshAuth = async () => {
-        toast.promise(
+        schadenToast.promise(
             async () => {
                 try {
                     await axiosInstance.post("/auth/refresh");
@@ -230,7 +230,7 @@ export const AuthProvider = ({ children }) => {
     // 🔹 RESET PASSWORD (Example of promise toast)
     // ================================
     const resetPassword = async (email) => {
-        toast.promise(
+        schadenToast.promise(
             async () => {
                 const { data } = await axiosInstance.post("/auth/forgot-password", { email });
                 if (!data.success) throw new Error(data.message);
@@ -254,7 +254,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     // ================================
-    // 🔹 CHANGE PASSWORD (Example of info toast)
+    // 🔹 CHANGE PASSWORD
     // ================================
     const changePassword = async (oldPassword, newPassword) => {
         try {
@@ -263,7 +263,7 @@ export const AuthProvider = ({ children }) => {
                 newPassword,
             });
 
-            toast.info("Password changed successfully", {
+            schadenToast.info("Password changed successfully", {
                 duration: 3000,
                 position: "top-center",
                 description: "Your password has been updated. Please use your new password next login.",
@@ -272,10 +272,64 @@ export const AuthProvider = ({ children }) => {
 
             return true;
         } catch (err) {
-            toast.error(err?.response?.data?.message || "Failed to change password", {
+            schadenToast.error(err?.response?.data?.message || "Failed to change password", {
                 duration: 4000,
                 position: "top-center",
                 description: "Please verify your current password and try again",
+            });
+            throw err;
+        }
+    };
+
+    // ================================
+    // 🔹 RESEND VERIFICATION EMAIL
+    // ================================
+    const resendVerification = async (email) => {
+        schadenToast.promise(
+            async () => {
+                const { data } = await axiosInstance.post("/auth/resend-verification", { email });
+                if (!data.success) throw new Error(data.message);
+                return data;
+            },
+            {
+                loading: "Sending verification email...",
+                success: (data) => ({
+                    message: data?.message || "Verification email sent!",
+                    description: `Please check your inbox at ${email}`,
+                    icon: "📧",
+                }),
+                error: (err) => ({
+                    message: err?.response?.data?.message || "Failed to send verification email",
+                    description: "Please try again or contact support",
+                }),
+                position: "top-center",
+                duration: 5000,
+            }
+        );
+    };
+
+    // ================================
+    // 🔹 UPDATE PROFILE
+    // ================================
+    const updateProfile = async (profileData) => {
+        try {
+            const { data } = await axiosInstance.put("/user/profile", profileData);
+
+            setUser(data?.data);
+
+            schadenToast.success("Profile updated successfully", {
+                duration: 3000,
+                position: "top-center",
+                description: "Your information has been saved",
+                icon: "✅",
+            });
+
+            return data?.data;
+        } catch (err) {
+            schadenToast.error(err?.response?.data?.message || "Failed to update profile", {
+                duration: 4000,
+                position: "top-center",
+                description: "Please check your information and try again",
             });
             throw err;
         }
@@ -297,6 +351,8 @@ export const AuthProvider = ({ children }) => {
         refreshAuth,
         resetPassword,
         changePassword,
+        resendVerification,
+        updateProfile,
     };
 
     return (

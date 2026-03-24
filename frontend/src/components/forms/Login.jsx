@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import { usePassword } from "../../context/PasswordContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -29,6 +30,7 @@ export default function Login() {
     const [sent, setSent] = useState(false);
 
     const { login } = useAuth();
+    const { forgotPassword, loading: passwordLoading } = usePassword();
     const navigate = useNavigate();
 
     const handleSubmit = async (e) => {
@@ -60,14 +62,12 @@ export default function Login() {
             return;
         }
 
-        setLoading(true);
         try {
-            await new Promise((r) => setTimeout(r, 800));
+            await forgotPassword(resetEmail);
             setSent(true);
-        } catch (e) {
-            setError("Failed to send link");
-        } finally {
-            setLoading(false);
+        } catch (err) {
+            // Error already handled in context with toast
+            setError("Failed to send reset link");
         }
     };
 
@@ -256,10 +256,10 @@ export default function Login() {
                                     <Button
                                         type="submit"
                                         className="w-full bg-stone-800 hover:bg-stone-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 mb-3"
-                                        disabled={loading}
+                                        disabled={passwordLoading}
                                         size="lg"
                                     >
-                                        {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                        {passwordLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                                         Send Reset Link
                                     </Button>
                                 )}

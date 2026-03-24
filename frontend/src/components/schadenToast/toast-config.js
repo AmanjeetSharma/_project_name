@@ -9,9 +9,14 @@ export const schadenToast = {
                 border: "none",
                 color: "white",
             },
+            duration: options.duration || 3000,
+            position: options.position || "top-center",
+            description: options.description,
+            icon: options.icon,
             ...options
         });
     },
+
     error: (message, options = {}) => {
         toast.error(message, {
             style: {
@@ -19,9 +24,14 @@ export const schadenToast = {
                 border: "none",
                 color: "white",
             },
+            duration: options.duration || 4000,
+            position: options.position || "top-center",
+            description: options.description,
+            icon: options.icon,
             ...options
         });
     },
+
     warning: (message, options = {}) => {
         toast.warning(message, {
             style: {
@@ -29,9 +39,14 @@ export const schadenToast = {
                 border: "none",
                 color: "white",
             },
+            duration: options.duration || 4000,
+            position: options.position || "top-center",
+            description: options.description,
+            icon: options.icon,
             ...options
         });
     },
+
     info: (message, options = {}) => {
         toast.info(message, {
             style: {
@@ -39,18 +54,70 @@ export const schadenToast = {
                 border: "none",
                 color: "white",
             },
+            duration: options.duration || 4000,
+            position: options.position || "top-center",
+            description: options.description,
+            icon: options.icon,
             ...options
         });
     },
+
     promise: (promise, options = {}) => {
         return toast.promise(promise, {
             loading: options.loading || "Loading...",
-            success: options.success,
-            error: options.error,
-            style: {
+            success: (data) => {
+                if (typeof options.success === 'string') {
+                    return {
+                        message: options.success,
+                        description: options.description,
+                        icon: options.icon,
+                    };
+                }
+                return options.success(data);
+            },
+            error: (err) => {
+                if (typeof options.error === 'string') {
+                    return {
+                        message: options.error,
+                        description: options.errorDescription,
+                        icon: options.errorIcon,
+                    };
+                }
+                return options.error(err);
+            },
+            position: options.position || "top-center",
+            duration: options.duration || 3000,
+            ...options
+        });
+    },
+
+    // Custom loading toast
+    loading: (message, options = {}) => {
+        return toast.loading(message, {
+            duration: options.duration || Infinity,
+            position: options.position || "top-center",
+            description: options.description,
+            ...options
+        });
+    },
+
+    // Dismiss all toasts
+    dismiss: () => {
+        toast.dismiss();
+    },
+
+    // Custom toast with custom styling
+    custom: (message, options = {}) => {
+        toast(message, {
+            style: options.style || {
                 background: "white",
                 border: "1px solid rgba(0, 0, 0, 0.05)",
+                color: "#1f2937",
             },
+            duration: options.duration || 3000,
+            position: options.position || "top-center",
+            description: options.description,
+            icon: options.icon,
             ...options
         });
     }

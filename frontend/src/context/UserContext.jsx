@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useCallback } from "react";
 import { useAuth } from "./AuthContext";
 import { axiosInstance } from "../lib/http";
-import toast from "react-hot-toast";
+import { schadenToast } from "@/components/schadenToast/toast-config";
 
 const UserContext = createContext(null);
 
@@ -24,21 +24,28 @@ export const UserProvider = ({ children }) => {
                 profileData
             );
 
-            const updatedUser = data?.data; // ✅ FIXED (no .user)
+            const updatedUser = data?.data;
 
             // 🔥 sync auth context
             await fetchProfile();
 
-            toast.success(
-                data?.message || "Profile updated successfully"
-            );
+            schadenToast.success(data?.message || "Profile updated successfully", {
+                duration: 3000,
+                position: "top-center",
+                description: "Your information has been saved",
+                icon: "✅",
+            });
 
             return updatedUser;
         } catch (err) {
             const msg =
                 err?.response?.data?.message ||
                 "Failed to update profile";
-            toast.error(msg);
+            schadenToast.error(msg, {
+                duration: 4000,
+                position: "top-center",
+                description: "Please check your information and try again",
+            });
             throw err;
         } finally {
             setUpdatingProfile(false);
@@ -53,9 +60,8 @@ export const UserProvider = ({ children }) => {
 
         try {
             const { data } = await axiosInstance.get("/user/sessions");
-            // console.log("Sessions response:", data); // DEBUG
 
-            const sessionsData = data?.data || []; 
+            const sessionsData = data?.data || [];
 
             setSessions(sessionsData);
 
@@ -64,7 +70,11 @@ export const UserProvider = ({ children }) => {
             const msg =
                 err?.response?.data?.message ||
                 "Failed to fetch sessions";
-            toast.error(msg);
+            schadenToast.error(msg, {
+                duration: 4000,
+                position: "top-center",
+                description: "Please refresh the page and try again",
+            });
             throw err;
         } finally {
             setLoadingSessions(false);
@@ -80,9 +90,12 @@ export const UserProvider = ({ children }) => {
                 `/user/sessions/logout/${sessionId}`
             );
 
-            toast.success(
-                data?.message || "Session terminated successfully"
-            );
+            schadenToast.success(data?.message || "Session terminated successfully", {
+                duration: 3000,
+                position: "top-center",
+                description: "The device has been logged out",
+                icon: "🔒",
+            });
 
             // 🔥 refresh sessions
             await getUserSessions();
@@ -90,11 +103,42 @@ export const UserProvider = ({ children }) => {
             const msg =
                 err?.response?.data?.message ||
                 "Failed to terminate session";
-            toast.error(msg);
+            schadenToast.error(msg, {
+                duration: 4000,
+                position: "top-center",
+                description: "Please try again or refresh the page",
+            });
             throw err;
         }
     };
 
+    // ================================
+    // 🔹 LOGOUT ALL OTHER SESSIONS (Bulk action)
+    // ================================
+    const logoutAllOtherSessions = async () => {
+        schadenToast.promise(
+            async () => {
+                const { data } = await axiosInstance.post("/user/sessions/logout-all");
+                if (!data.success) throw new Error(data.message);
+                await getUserSessions();
+                return data;
+            },
+            {
+                loading: "Terminating other sessions...",
+                success: (data) => ({
+                    message: data?.message || "All other sessions terminated",
+                    description: "Your account is now only active on this device",
+                    icon: "🔒",
+                }),
+                error: (err) => ({
+                    message: err?.response?.data?.message || "Failed to terminate sessions",
+                    description: "Please try again or contact support",
+                }),
+                position: "top-center",
+                duration: 4000,
+            }
+        );
+    };
     // ================================
     // 🔹 VALUE
     // ================================
@@ -110,6 +154,7 @@ export const UserProvider = ({ children }) => {
         loadingSessions,
         getUserSessions,
         logoutSession,
+        logoutAllOtherSessions, // New bulk action
     };
 
     return (
