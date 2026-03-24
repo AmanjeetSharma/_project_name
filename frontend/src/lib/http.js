@@ -42,7 +42,6 @@ axiosInstance.interceptors.response.use(
                 return axiosInstance(originalRequest);
             } catch (refreshErr) {
                 // Refresh failed - redirect to login
-                console.error("Refresh token failed:", refreshErr);
 
                 // Clear any stale auth data
                 localStorage.removeItem("backendReady");

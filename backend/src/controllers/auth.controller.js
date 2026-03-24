@@ -74,7 +74,6 @@ const register = asyncHandler(async (req, res) => {
     //     true
     // );
     console.log(`Verification email sent to ${email} with link: ${verifyLink}`); // temporary log since email sending is disabled for testing
-    console.log(`Verification email sent to ${email}`); // temporary log since email sending is disabled for testing
 
     return res.status(200).json(
         new ApiResponse(
