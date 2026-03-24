@@ -2,7 +2,7 @@ import express from "express";
 import { verifyToken } from "../middlewares/auth.middleware.js";
 import {
   register,
-  verify,
+  verifyEmail,
   login,
   logout,
   logoutAll,
@@ -15,7 +15,7 @@ const router = express.Router();
 router.post("/register", register);
 
 // Verify Email
-router.get("/verify/:token", verify);
+router.post("/verify/:token", verifyEmail);
 
 // Login
 router.post("/login", login);

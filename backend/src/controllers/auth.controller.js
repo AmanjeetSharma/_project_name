@@ -73,7 +73,7 @@ const register = asyncHandler(async (req, res) => {
     //     emailHTML,
     //     true
     // );
-
+    console.log(`Verification email sent to ${email} with link: ${verifyLink}`); // temporary log since email sending is disabled for testing
     console.log(`Verification email sent to ${email}`); // temporary log since email sending is disabled for testing
 
     return res.status(200).json(
@@ -97,9 +97,10 @@ const register = asyncHandler(async (req, res) => {
 
 
 
-const verify = asyncHandler(async (req, res) => {
+const verifyEmail = asyncHandler(async (req, res) => {
     const { token } = req.params;
     const { device = "Email Verification" } = req.body;
+    console.log(`Verification attempt | Token: ${token} | Device: ${device}`);
 
     const pending = await PendingUser.findOne({
         verificationToken: token,
@@ -190,7 +191,13 @@ const verify = asyncHandler(async (req, res) => {
     return res
         .cookie("accessToken", accessToken, cookieOptions)
         .cookie("refreshToken", refreshToken, cookieOptions)
-        .redirect(redirectUrl);
+        .json(
+            new ApiResponse(
+                200,
+                null,
+                "Email verified successfully! Redirecting to dashboard..."
+            )
+        );
 });
 
 
@@ -360,12 +367,9 @@ const refresh = asyncHandler(async (req, res) => {
     const token =
         req.cookies?.refreshToken
     console.log("Refresh token received:", token); // Debug log
-    console.log("TOKEN LENGTH:", token.length);
-    console.log("TOKEN LAST CHAR:", token[token.length - 1]);
     if (!token) {
         throw new ApiError(401, "No refresh token provided");
     }
-    console.log("------------------------- req reached this part  -------------------------");
     let decoded;
     try {
         console.log(process.env.REFRESH_TOKEN_SECRET); // Debug log
@@ -416,7 +420,7 @@ const refresh = asyncHandler(async (req, res) => {
 
 export {
     register,
-    verify,
+    verifyEmail,
     login,
     logout,
     logoutAll,

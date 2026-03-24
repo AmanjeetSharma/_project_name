@@ -1,9 +1,9 @@
-// routes/ProtectedRoute.jsx
+// routes/PublicRoute.jsx
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { Loader2 } from "lucide-react";
 
-export default function ProtectedRoute({ children }) {
+export default function PublicRoute({ children }) {
     const { isAuthenticated, loading } = useAuth();
 
     if (loading) {
@@ -14,8 +14,8 @@ export default function ProtectedRoute({ children }) {
         );
     }
 
-    if (!isAuthenticated) {
-        return <Navigate to="/login" replace />;
+    if (isAuthenticated) {
+        return <Navigate to="/dashboard" replace />;
     }
 
     return children;
