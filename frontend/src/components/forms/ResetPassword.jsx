@@ -146,10 +146,10 @@ const ResetPassword = () => {
                             </div>
                         </div>
                         <CardTitle className="text-2xl font-light tracking-tight">
-                            Invalid Reset Link
+                            Missing Token!
                         </CardTitle>
                         <CardDescription>
-                            No reset token was provided in the URL.
+                            No reset token was provided in the URL
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="px-8 pb-8">
@@ -229,10 +229,10 @@ const ResetPassword = () => {
                                         <div className="flex justify-between text-xs">
                                             <span className="text-gray-500">Password strength:</span>
                                             <span className={`font-medium ${getPasswordStrength().text === "Very Weak" ? "text-red-500" :
-                                                    getPasswordStrength().text === "Weak" ? "text-orange-500" :
-                                                        getPasswordStrength().text === "Medium" ? "text-yellow-500" :
-                                                            getPasswordStrength().text === "Strong" ? "text-blue-500" :
-                                                                "text-green-500"
+                                                getPasswordStrength().text === "Weak" ? "text-orange-500" :
+                                                    getPasswordStrength().text === "Medium" ? "text-yellow-500" :
+                                                        getPasswordStrength().text === "Strong" ? "text-blue-500" :
+                                                            "text-green-500"
                                                 }`}>
                                                 {getPasswordStrength().text}
                                             </span>

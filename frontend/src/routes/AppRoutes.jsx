@@ -19,6 +19,7 @@ const HowItWorks = lazy(() => import("../pages/public/HowItWorks"));
 const Register = lazy(() => import("../components/forms/Register"));
 const Verify = lazy(() => import("../components/forms/Verify"));
 const Login = lazy(() => import("../components/forms/Login"));
+const ForgotPassword = lazy(() => import("../components/forms/ForgotPassword"));
 const ResetPassword = lazy(() => import("../components/forms/ResetPassword"));
 
 //user related pages
@@ -37,6 +38,7 @@ const AppRoutes = () => {
                     <Route path="/login" element={<Login />} />
                     <Route path="/register" element={<Register />} />
                     <Route path="/verify/:token" element={<Verify />} />
+                    <Route path="/forgot-password" element={<ForgotPassword />} />
                     <Route path="/reset-password" element={<ResetPassword />} />
                 </Route>
 

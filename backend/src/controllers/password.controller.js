@@ -129,12 +129,12 @@ const forgotPassword = asyncHandler(async (req, res) => {
 
     const emailHTML = resetPasswordEmail(resetLink);
 
-    await sendEmail(
-        user.email,
-        "Reset Your Password - CollegeFinder",
-        emailHTML,
-        true
-    );
+    // await sendEmail(
+    //     user.email,
+    //     "Reset Your Password - CollegeFinder",
+    //     emailHTML,
+    //     true
+    // );
     
     console.log(`Reset link generated for ${user.email}: ${resetLink}`); // log the reset link for testing since email sending is disabled
 
