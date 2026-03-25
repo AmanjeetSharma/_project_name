@@ -195,14 +195,12 @@ export default function Verify() {
                             </Button>
                             <Link to="/register">
                                 <Button variant="ghost" className="w-full text-stone-600 hover:text-stone-800 hover:bg-stone-50 cursor-pointer">
-                                    Create New Account
+                                    Resend Verification Link
                                 </Button>
                             </Link>
                         </div>
                     )}
                 </CardFooter>
-
-                {/* Subtle texture overlay */}
             </Card>
         </div>
     );

@@ -1,20 +1,25 @@
 // routes/PublicRoute.jsx
-import { Navigate } from "react-router-dom";
+import { Navigate, Outlet } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import PageLoader from "@/utils/PageLoader";
 
-export default function PublicRoute({ children }) {
+export default function PublicRoute() {
     const { isAuthenticated, loading } = useAuth();
 
-    if (loading) return (
-        <div className="min-h-screen flex items-center justify-center">
-            <PageLoader />
-        </div>
-    );
+    // Show loading spinner while checking auth status
+    if (loading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <PageLoader />
+            </div>
+        );
+    }
 
+    // if authenticated, redirect to dashboard
     if (isAuthenticated) {
         return <Navigate to="/dashboard" replace />;
     }
 
-    return children;
+    // if not authenticated, render the nested routes
+    return <Outlet />;
 }

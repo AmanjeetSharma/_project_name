@@ -1,7 +1,7 @@
 // pages/NotFound.jsx
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { Button } from "../components/ui/button";
+import { Button } from "@/components/ui/button";
 import { Home, ArrowLeft } from "lucide-react";
 
 const NotFound = () => {

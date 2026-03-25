@@ -1,8 +1,8 @@
 // pages/Profile.jsx
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { useAuth } from "../context/AuthContext";
-import { useUser } from "../context/UserContext";
+import { useAuth } from "../../context/AuthContext";
+import { useUser } from "../../context/UserContext";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import ChangePassword from "./ChangePassword";
+import ChangePassword from "../auth/ChangePassword";
 import {
     User,
     Mail,

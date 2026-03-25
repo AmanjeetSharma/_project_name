@@ -8,11 +8,11 @@ import PageLoader from "../utils/PageLoader";
 // Lazy load components
 
 //info pages/general pages
-const Home = lazy(() => import("../pages/Home"));
-const NotFound = lazy(() => import("../pages/NotFound"));
-const About = lazy(() => import("../pages/About"));
-const Contact = lazy(() => import("../pages/Contact"));
-const HowItWorks = lazy(() => import("../pages/HowItWorks"));
+const Home = lazy(() => import("../pages/public/Home"));
+const NotFound = lazy(() => import("../pages/errors/NotFound"));
+const About = lazy(() => import("../pages/public/About"));
+const Contact = lazy(() => import("../pages/public/Contact"));
+const HowItWorks = lazy(() => import("../pages/public/HowItWorks"));
 
 
 //auth related pages
@@ -22,39 +22,41 @@ const Login = lazy(() => import("../components/forms/Login"));
 const ResetPassword = lazy(() => import("../components/forms/ResetPassword"));
 
 //user related pages
-const Dashboard = lazy(() => import("../pages/Dashboard"));
-const Profile = lazy(() => import("../pages/Profile"));
-const Sessions = lazy(() => import("../pages/Sessions"));
-const FindCollege = lazy(() => import("../pages/FindCollege"));
+const Dashboard = lazy(() => import("../pages/user/Dashboard"));
+const Profile = lazy(() => import("../pages/user/Profile"));
+const Sessions = lazy(() => import("../pages/user/Sessions"));
+const FindCollege = lazy(() => import("../pages/college/FindCollege"));
 
 const AppRoutes = () => {
     return (
         <Suspense fallback={<PageLoader />}>
             <Routes>
 
-                {/* Public routes (blocked if logged in) */}
-                <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
-                <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
-                <Route path="/verify/:token" element={<PublicRoute><Verify /></PublicRoute>} />
-                <Route path="/reset-password" element={<PublicRoute><ResetPassword /></PublicRoute>} />
-                
-                {/* Public route */}
-                <Route path="/" element={<Home />} />
+                {/* Public (blocked if logged in) */}
+                <Route element={<PublicRoute />}>
+                    <Route path="/login" element={<Login />} />
+                    <Route path="/register" element={<Register />} />
+                    <Route path="/verify/:token" element={<Verify />} />
+                    <Route path="/reset-password" element={<ResetPassword />} />
+                </Route>
 
+                {/* Open routes */}
+                <Route path="/" element={<Home />} />
                 <Route path="/about" element={<About />} />
                 <Route path="/contact" element={<Contact />} />
                 <Route path="/how-it-works" element={<HowItWorks />} />
                 <Route path="/colleges" element={<FindCollege />} />
 
-                {/* Protected routes */}
-                <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-                <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-                <Route path="/sessions" element={<ProtectedRoute><Sessions /></ProtectedRoute>} />
+                {/* Protected */}
+                <Route element={<ProtectedRoute />}>
+                    <Route path="/dashboard" element={<Dashboard />} />
+                    <Route path="/profile" element={<Profile />} />
+                    <Route path="/sessions" element={<Sessions />} />
+                </Route>
 
-
-
-                {/* Catch-all route for 404 */}
+                {/* 404 */}
                 <Route path="*" element={<NotFound />} />
+
             </Routes>
         </Suspense>
     );
