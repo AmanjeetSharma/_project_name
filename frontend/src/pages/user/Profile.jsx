@@ -11,7 +11,6 @@ import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import ChangePassword from "../auth/ChangePassword";
 import {
     User,
     Mail,
@@ -59,7 +58,6 @@ const Profile = () => {
     const [newSkill, setNewSkill] = useState("");
     const [activeTab, setActiveTab] = useState("personal");
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-    const [changePasswordDialogOpen, setChangePasswordDialogOpen] = useState(false);
 
     const stats = [
         { icon: TrendingUp, label: "Aptitude Score", value: "85%" },
@@ -154,7 +152,7 @@ const Profile = () => {
                         {/* Mobile Action Buttons */}
                         <div className="flex items-center gap-2 sm:hidden">
                             <Button
-                                onClick={() => setChangePasswordDialogOpen(true)}
+                                onClick={() => navigate('/change-password')}
                                 variant="outline"
                                 size="sm"
                                 className="border-gray-300 hover:bg-gray-50"
@@ -186,7 +184,7 @@ const Profile = () => {
                         </div>
                         <div className="flex gap-3">
                             <Button
-                                onClick={() => setChangePasswordDialogOpen(true)}
+                                onClick={() => navigate('/change-password')}
                                 variant="outline"
                                 className="border-gray-300 hover:bg-gray-50"
                             >
@@ -637,12 +635,6 @@ const Profile = () => {
                     </TabsContent>
                 </Tabs>
             </div>
-
-            {/* Change Password Component */}
-            <ChangePassword 
-                open={changePasswordDialogOpen} 
-                onOpenChange={setChangePasswordDialogOpen} 
-            />
         </div>
     );
 };

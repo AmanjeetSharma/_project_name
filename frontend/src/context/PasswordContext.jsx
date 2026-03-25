@@ -7,25 +7,22 @@ const PasswordContext = createContext(null);
 export const PasswordProvider = ({ children }) => {
     const [loading, setLoading] = useState(false);
 
-    // ================================
-    // 🔹 CHANGE PASSWORD (AUTH REQUIRED)
-    // ================================
-    const changePassword = async ({
-        currentPassword,
-        newPassword,
-        confirmNewPassword,
-    }) => {
+
+
+
+
+
+
+
+
+    // CHANGE PASSWORD (AUTH REQUIRED)
+    const changePassword = async ({ currentPassword, newPassword, confirmNewPassword, }) => {
         setLoading(true);
 
         try {
-            const { data } = await axiosInstance.post(
-                "/password/change-password",
-                {
-                    currentPassword,
-                    newPassword,
-                    confirmNewPassword,
-                }
-            );
+            const { data } = await axiosInstance.post("/password/change-password", {
+                currentPassword, newPassword, confirmNewPassword,
+            });
 
             schadenToast.success(
                 data?.message ||
@@ -54,65 +51,65 @@ export const PasswordProvider = ({ children }) => {
         }
     };
 
-    // ================================
-    // 🔹 FORGOT PASSWORD
-    // ================================
-        const forgotPassword = async (email) => {
-            setLoading(true);
 
-            try {
-                const { data } = await axiosInstance.post(
-                    "/password/forgot-password",
-                    { email }
-                );
 
-                // ⚠️ Always generic message (security)
-                schadenToast.success(
-                    data?.message ||
-                    "If this email exists, a reset link has been sent",
-                    {
-                        duration: 5000,
-                        position: "top-center",
-                        description: "Please check your inbox and spam folder",
-                        icon: "📧",
-                    }
-                );
 
-                return true;
-            } catch (err) {
-                const msg =
-                    err?.response?.data?.message ||
-                    "Something went wrong";
-                schadenToast.error(msg, {
-                    duration: 4000,
-                    position: "top-center",
-                    description: "Please try again or contact support",
-                });
-                throw err;
-            } finally {
-                setLoading(false);
-            }
-        };
 
-    // ================================
-    // 🔹 RESET PASSWORD
-    // ================================
-    const resetPassword = async ({
-        token,
-        newPassword,
-        confirmNewPassword,
-    }) => {
+
+
+
+
+    // FORGOT PASSWORD
+    const forgotPassword = async (email) => {
         setLoading(true);
 
         try {
-            const { data } = await axiosInstance.post(
-                "/password/reset-password",
+            const { data } = await axiosInstance.post("/password/forgot-password", { email });
+
+            // ⚠️ Always generic message (security)
+            schadenToast.success(
+                data?.message ||
+                "If this email exists, a reset link has been sent",
                 {
-                    token,
-                    newPassword,
-                    confirmNewPassword,
+                    duration: 5000,
+                    position: "top-center",
+                    description: "Please check your inbox and spam folder",
+                    icon: "📧",
                 }
             );
+
+            return true;
+        } catch (err) {
+            const msg =
+                err?.response?.data?.message ||
+                "Something went wrong";
+            schadenToast.error(msg, {
+                duration: 4000,
+                position: "top-center",
+                description: "Please try again or contact support",
+            });
+            throw err;
+        } finally {
+            setLoading(false);
+        }
+    };
+
+
+
+
+
+
+
+
+
+    // RESET PASSWORD
+    const resetPassword = async ({ token, newPassword, confirmNewPassword, }) => {
+        setLoading(true);
+
+        try {
+            const { data } = await axiosInstance.post("/password/reset-password", {
+                token, newPassword, confirmNewPassword,
+            });
 
             schadenToast.success(
                 data?.message ||
@@ -140,9 +137,14 @@ export const PasswordProvider = ({ children }) => {
         }
     };
 
-    // ================================
-    // 🔹 VALUE
-    // ================================
+
+
+
+
+
+
+
+
     const value = {
         loading,
         changePassword,
@@ -157,9 +159,7 @@ export const PasswordProvider = ({ children }) => {
     );
 };
 
-// ================================
-// 🔹 HOOK
-// ================================
+
 export const usePassword = () => {
     const context = useContext(PasswordContext);
     if (!context) {

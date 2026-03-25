@@ -19,6 +19,7 @@ const HowItWorks = lazy(() => import("../pages/public/HowItWorks"));
 const Register = lazy(() => import("../components/forms/Register"));
 const Verify = lazy(() => import("../components/forms/Verify"));
 const Login = lazy(() => import("../components/forms/Login"));
+const ChangePassword = lazy(() => import("../components/forms/ChangePassword"));
 const ForgotPassword = lazy(() => import("../components/forms/ForgotPassword"));
 const ResetPassword = lazy(() => import("../components/forms/ResetPassword"));
 
@@ -54,6 +55,7 @@ const AppRoutes = () => {
                     <Route path="/dashboard" element={<Dashboard />} />
                     <Route path="/profile" element={<Profile />} />
                     <Route path="/sessions" element={<Sessions />} />
+                    <Route path="/change-password" element={<ChangePassword />} />
                 </Route>
 
                 {/* 404 */}

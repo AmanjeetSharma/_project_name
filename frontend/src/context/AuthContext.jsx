@@ -16,9 +16,16 @@ export const AuthProvider = ({ children }) => {
 
     const isAuthenticated = Boolean(user?._id);
 
-    // ================================
-    // 🔹 FETCH PROFILE
-    // ================================
+
+
+
+
+
+
+
+
+
+    // FETCH PROFILE
     const fetchProfile = useCallback(async () => {
         try {
             const { data } = await axiosInstance.get("/user/profile");
@@ -41,16 +48,21 @@ export const AuthProvider = ({ children }) => {
         }
     }, []);
 
-    // ================================
-    // 🔹 INITIAL LOAD (NO FLICKER FIX)
-    // ================================
+    // INITIAL LOAD (NO FLICKER FIX)
     useEffect(() => {
         fetchProfile();
     }, [fetchProfile]);
 
-    // ================================
-    // 🔹 REGISTER
-    // ================================
+
+
+
+
+
+
+
+
+
+    // REGISTER
     const register = async ({ name, email, password }) => {
         try {
             const { data } = await axiosInstance.post("/auth/register", {
@@ -80,9 +92,15 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
-    // ================================
-    // 🔹 VERIFY EMAIL
-    // ================================
+
+
+
+
+
+
+
+
+    // VERIFY EMAIL
     const verifyEmail = async (token) => {
         try {
             const { data } = await axiosInstance.post(
@@ -110,9 +128,14 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
-    // ================================
-    // 🔹 LOGIN
-    // ================================
+
+
+
+
+
+
+
+    // LOGIN
     const login = async (email, password, device = "web") => {
         try {
             const { data } = await axiosInstance.post("/auth/login", {
@@ -151,9 +174,14 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
-    // ================================
-    // 🔹 LOGOUT (CURRENT DEVICE)
-    // ================================
+
+
+
+
+
+
+
+    // LOGOUT (CURRENT DEVICE)
     const logout = async () => {
         try {
             await axiosInstance.post("/auth/logout");
@@ -164,20 +192,26 @@ export const AuthProvider = ({ children }) => {
             });
         } catch (err) {
             console.warn("Logout API failed, clearing locally");
-            schadenToast.warning("Logged out locally", {
+            schadenToast.warning("Logged out locally", { //means
                 duration: 2000,
                 position: "top-center",
                 description: "Your session has been cleared from this device",
             });
         } finally {
-            setUser(null);
-            localStorage.removeItem("backendReady");
+            clearSession();
         }
     };
 
-    // ================================
-    // 🔹 LOGOUT ALL DEVICES
-    // ================================
+
+
+
+
+
+
+
+
+
+    // LOGOUT ALL DEVICES
     const logoutAll = async () => {
         try {
             const { data } = await axiosInstance.post("/auth/logout-all");
@@ -203,141 +237,20 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
-    // ================================
-    // 🔹 REFRESH TOKEN (OPTIONAL MANUAL)
-    // ================================
-    const refreshAuth = async () => {
-        schadenToast.promise(
-            async () => {
-                try {
-                    await axiosInstance.post("/auth/refresh");
-                    await fetchProfile();
-                } catch (err) {
-                    throw err;
-                }
-            },
-            {
-                loading: "Refreshing session...",
-                success: "Session refreshed successfully",
-                error: "Failed to refresh session",
-                position: "top-center",
-                duration: 3000,
-            }
-        );
+
+
+
+
+
+
+
+
+
+    const clearSession = () => {
+        setUser(null);
+        localStorage.removeItem("backendReady");
     };
 
-    // ================================
-    // 🔹 RESET PASSWORD (Example of promise toast)
-    // ================================
-    const resetPassword = async (email) => {
-        schadenToast.promise(
-            async () => {
-                const { data } = await axiosInstance.post("/auth/forgot-password", { email });
-                if (!data.success) throw new Error(data.message);
-                return data;
-            },
-            {
-                loading: "Sending reset link...",
-                success: (data) => ({
-                    message: data?.message || "Reset link sent!",
-                    description: `Check your email at ${email} for the reset link`,
-                    icon: "📧",
-                }),
-                error: (err) => ({
-                    message: err?.response?.data?.message || "Failed to send reset link",
-                    description: "Please check your email address and try again",
-                }),
-                position: "top-center",
-                duration: 5000,
-            }
-        );
-    };
-
-    // ================================
-    // 🔹 CHANGE PASSWORD
-    // ================================
-    const changePassword = async (oldPassword, newPassword) => {
-        try {
-            await axiosInstance.post("/auth/change-password", {
-                oldPassword,
-                newPassword,
-            });
-
-            schadenToast.info("Password changed successfully", {
-                duration: 3000,
-                position: "top-center",
-                description: "Your password has been updated. Please use your new password next login.",
-                icon: "🔐",
-            });
-
-            return true;
-        } catch (err) {
-            schadenToast.error(err?.response?.data?.message || "Failed to change password", {
-                duration: 4000,
-                position: "top-center",
-                description: "Please verify your current password and try again",
-            });
-            throw err;
-        }
-    };
-
-    // ================================
-    // 🔹 RESEND VERIFICATION EMAIL
-    // ================================
-    const resendVerification = async (email) => {
-        schadenToast.promise(
-            async () => {
-                const { data } = await axiosInstance.post("/auth/resend-verification", { email });
-                if (!data.success) throw new Error(data.message);
-                return data;
-            },
-            {
-                loading: "Sending verification email...",
-                success: (data) => ({
-                    message: data?.message || "Verification email sent!",
-                    description: `Please check your inbox at ${email}`,
-                    icon: "📧",
-                }),
-                error: (err) => ({
-                    message: err?.response?.data?.message || "Failed to send verification email",
-                    description: "Please try again or contact support",
-                }),
-                position: "top-center",
-                duration: 5000,
-            }
-        );
-    };
-
-    // ================================
-    // 🔹 UPDATE PROFILE
-    // ================================
-    const updateProfile = async (profileData) => {
-        try {
-            const { data } = await axiosInstance.put("/user/profile", profileData);
-
-            setUser(data?.data);
-
-            schadenToast.success("Profile updated successfully", {
-                duration: 3000,
-                position: "top-center",
-                description: "Your information has been saved",
-                icon: "✅",
-            });
-
-            return data?.data;
-        } catch (err) {
-            schadenToast.error(err?.response?.data?.message || "Failed to update profile", {
-                duration: 4000,
-                position: "top-center",
-                description: "Please check your information and try again",
-            });
-            throw err;
-        }
-    };
-
-    // ================================
-    // 🔹 VALUE
-    // ================================
     const value = {
         user,
         loading,
@@ -348,11 +261,7 @@ export const AuthProvider = ({ children }) => {
         logout,
         logoutAll,
         fetchProfile,
-        refreshAuth,
-        resetPassword,
-        changePassword,
-        resendVerification,
-        updateProfile,
+        clearSession,
     };
 
     return (
@@ -362,9 +271,7 @@ export const AuthProvider = ({ children }) => {
     );
 };
 
-// ================================
-// 🔹 HOOK
-// ================================
+
 export const useAuth = () => {
     const context = useContext(AuthContext);
     if (!context) {

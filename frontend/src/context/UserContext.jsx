@@ -12,21 +12,23 @@ export const UserProvider = ({ children }) => {
     const [loadingSessions, setLoadingSessions] = useState(false);
     const [sessions, setSessions] = useState([]);
 
-    // ================================
-    // 🔹 UPDATE PROFILE
-    // ================================
+
+
+
+
+
+
+
+
+    // UPDATE PROFILE
     const updateProfile = async (profileData) => {
         setUpdatingProfile(true);
 
         try {
-            const { data } = await axiosInstance.patch(
-                "/user/update-profile",
-                profileData
-            );
+            const { data } = await axiosInstance.patch("/user/update-profile", profileData);
 
             const updatedUser = data?.data;
 
-            // 🔥 sync auth context
             await fetchProfile();
 
             schadenToast.success(data?.message || "Profile updated successfully", {
@@ -52,9 +54,16 @@ export const UserProvider = ({ children }) => {
         }
     };
 
-    // ================================
-    // 🔹 GET SESSIONS
-    // ================================
+
+
+
+
+
+
+
+
+
+    // GET SESSIONS
     const getUserSessions = useCallback(async () => {
         setLoadingSessions(true);
 
@@ -81,14 +90,18 @@ export const UserProvider = ({ children }) => {
         }
     }, []);
 
-    // ================================
-    // 🔹 LOGOUT SPECIFIC SESSION
-    // ================================
+
+
+
+
+
+
+
+
+    // LOGOUT SPECIFIC SESSION
     const logoutSession = async (sessionId) => {
         try {
-            const { data } = await axiosInstance.post(
-                `/user/sessions/logout/${sessionId}`
-            );
+            const { data } = await axiosInstance.post(`/user/sessions/logout/${sessionId}`);
 
             schadenToast.success(data?.message || "Session terminated successfully", {
                 duration: 3000,
@@ -112,13 +125,20 @@ export const UserProvider = ({ children }) => {
         }
     };
 
-    // ================================
-    // 🔹 LOGOUT ALL OTHER SESSIONS (Bulk action)
-    // ================================
+
+
+
+
+
+
+
+
+    // LOGOUT ALL OTHER SESSIONS (Bulk action)
     const logoutAllOtherSessions = async () => {
         schadenToast.promise(
             async () => {
                 const { data } = await axiosInstance.post("/user/sessions/logout-all");
+
                 if (!data.success) throw new Error(data.message);
                 await getUserSessions();
                 return data;
@@ -139,9 +159,14 @@ export const UserProvider = ({ children }) => {
             }
         );
     };
-    // ================================
-    // 🔹 VALUE
-    // ================================
+
+
+
+
+
+
+
+
     const value = {
         user, // from AuthContext
 
@@ -154,7 +179,7 @@ export const UserProvider = ({ children }) => {
         loadingSessions,
         getUserSessions,
         logoutSession,
-        logoutAllOtherSessions, // New bulk action
+        logoutAllOtherSessions,
     };
 
     return (
@@ -164,9 +189,7 @@ export const UserProvider = ({ children }) => {
     );
 };
 
-// ================================
-// 🔹 HOOK
-// ================================
+
 export const useUser = () => {
     const context = useContext(UserContext);
     if (!context) {
