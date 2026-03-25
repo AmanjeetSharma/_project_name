@@ -385,7 +385,7 @@ const ResetPassword = () => {
                             </div>
                         </div>
                         <AlertDialogTitle className="text-2xl font-semibold text-stone-800">
-                            Password Changed!
+                            Password Reset Successful!
                         </AlertDialogTitle>
                         <AlertDialogDescription className="text-stone-600">
                             Your password has been successfully reset.
