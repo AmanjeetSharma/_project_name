@@ -294,7 +294,8 @@ const logoutAll = asyncHandler(async (req, res) => {
     }
 
     const currentToken = req.cookies?.refreshToken;
-    console.log(`Logout all initiated | User ID: ${userId} | Current Token: ${currentToken}`);
+
+    // console.log(`Logout all initiated | User ID: ${userId} | Current Token: ${currentToken}`); // Debug log
 
     if (!currentToken) {
         throw new ApiError(400, "No active session found");
@@ -306,25 +307,38 @@ const logoutAll = asyncHandler(async (req, res) => {
         throw new ApiError(404, "User not found");
     }
 
-    let currentSessionFound = false;
+    // step 1: Validate current session
+    const currentSession = user.sessions.find(
+        (session) => String(session.refreshToken) === String(currentToken)
+    );
 
+    if (!currentSession) {
+        throw new ApiError(401, "Current session invalid or expired");
+    }
+
+    // step 2: Check if there are other active sessions
+    const otherActiveSessions = user.sessions.filter(
+        (session) =>
+            String(session.refreshToken) !== String(currentToken) &&
+            session.isActive
+    );
+    
+    if (otherActiveSessions.length === 0) {
+        throw new ApiError(400, "No other active sessions found");
+    }
+
+    // step 3: Deactivate all other sessions except current
     user.sessions = user.sessions.map((session) => {
-
-        if (session.refreshToken === currentToken) {
-            currentSessionFound = true;
-            return session;
+        if (String(session.refreshToken) === String(currentToken)) {
+            return session; // keep current session active
         }
 
         return {
-            ...session.toObject(),
+            ...session,
             isActive: false,
             refreshToken: null,
         };
     });
-
-    if (!currentSessionFound) {
-        throw new ApiError(401, "Current session invalid or expired");
-    }
 
     await user.save();
 
@@ -334,7 +348,7 @@ const logoutAll = asyncHandler(async (req, res) => {
         new ApiResponse(
             200,
             null,
-            "Logged out from all devices"
+            "Logged out from all other devices"
         )
     );
 });

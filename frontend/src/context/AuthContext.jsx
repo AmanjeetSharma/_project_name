@@ -216,8 +216,7 @@ export const AuthProvider = ({ children }) => {
             schadenToast.success(data?.message || "Logged out from all other devices", {
                 duration: 4000,
                 position: "top-center",
-                description: "All active sessions have been terminated",
-                icon: "🔒",
+                description: "current session remains active",
             });
 
         } catch (err) {
@@ -225,6 +224,13 @@ export const AuthProvider = ({ children }) => {
                 err?.response?.data?.message ||
                 "Failed to logout from other devices";
 
+            if (msg === "No other active sessions found") {
+                schadenToast.warning(msg, {
+                    duration: 6000,
+                    position: "top-center",
+                });
+                return; //exit early since this is not really an error
+            }   
             schadenToast.error(msg, {
                 duration: 4000,
                 position: "top-center",
