@@ -32,7 +32,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useCollege } from "../../context/CollegeContext";
 
-const CollegeDetail = () => {
+const CollegeDetails = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const { loading, selectedCollege, getCollegeById } = useCollege();
@@ -411,4 +411,4 @@ const CollegeDetail = () => {
     );
 };
 
-export default CollegeDetail;
+export default CollegeDetails;
