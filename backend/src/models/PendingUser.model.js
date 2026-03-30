@@ -26,4 +26,5 @@ const pendingUserSchema = new mongoose.Schema(
 // TTL → auto delete after 1 hour
 pendingUserSchema.index({ createdAt: 1 }, { expireAfterSeconds: 3600 });
 
-export const PendingUser = mongoose.model("PendingUser", pendingUserSchema);
+export const PendingUser =
+    mongoose.models.PendingUser || mongoose.model("PendingUser", pendingUserSchema);

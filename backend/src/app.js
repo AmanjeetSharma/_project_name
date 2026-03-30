@@ -24,12 +24,14 @@ app.use(cookieParser());
 import authRoutes from "./routes/auth.routes.js";
 import userRoutes from "./routes/user.routes.js";
 import passwordRoutes from "./routes/password.routes.js";
+import collegeRoutes from "./routes/college.routes.js";
 
 
 // Use routes
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/user", userRoutes);
 app.use("/api/v1/password", passwordRoutes);
+app.use("/api/v1/colleges", collegeRoutes);
 
 
 // Error handling middleware

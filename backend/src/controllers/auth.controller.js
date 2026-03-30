@@ -4,7 +4,7 @@ import sendEmail from "../utils/sendEmail.js";
 import registerEmail from "../utils/emailTemplates/registerEmail.js";
 import welcomeEmail from "../utils/emailTemplates/welcomeEmail.js";
 import { User } from "../models/user.model.js";
-import { PendingUser } from "../models/PendingUser.model.js";
+import { PendingUser } from "../models/pendingUser.model.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";

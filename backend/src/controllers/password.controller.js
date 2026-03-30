@@ -108,6 +108,7 @@ const forgotPassword = asyncHandler(async (req, res) => {
 
     if (!user) {
         await delay(2300); // 2 second delay to mitigate user enumeration attacks
+        console.log(`User with email ${email} does not exist.`);
         return res.status(200).json(
             new ApiResponse(200, null, "If this email exists, a reset link has been sent")
         );
