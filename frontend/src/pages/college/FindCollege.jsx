@@ -340,7 +340,7 @@ const FindCollege = () => {
 
                 {loading ? (
                     <div className="flex justify-center items-center py-16">
-                        <Loader2 className="h-7 w-7 animate-spin text-gray-700" />
+                        <Loader2 className="h-7 w-7 animate-spin text-gray-900" />
                     </div>
                 ) : (
                     <>
