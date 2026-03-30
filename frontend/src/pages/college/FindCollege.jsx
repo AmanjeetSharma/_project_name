@@ -6,12 +6,9 @@ import {
     Search,
     Filter,
     MapPin,
-    Star,
-    GraduationCap,
     TrendingUp,
     Building2,
     ExternalLink,
-    Heart,
     Share2,
     X,
     Loader2,
@@ -27,6 +24,8 @@ import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
 import { useCollege } from "../../context/CollegeContext";
+import { FaBookmark } from "react-icons/fa6";
+import { FaStar } from "react-icons/fa";
 
 const FindCollege = () => {
     const navigate = useNavigate();
@@ -39,33 +38,28 @@ const FindCollege = () => {
     const [showFilters, setShowFilters] = useState(false);
     const [cutoffRange, setCutoffRange] = useState([0, 100]);
     const [tempCutoffRange, setTempCutoffRange] = useState([0, 100]);
-    const [selectedColleges, setSelectedColleges] = useState([]);
+    const [savedColleges, setSavedColleges] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
     const [pageInput, setPageInput] = useState("");
     const [hasAppliedFilters, setHasAppliedFilters] = useState(false);
     const [stateSearchQuery, setStateSearchQuery] = useState("");
 
-    // Get unique values for filters from actual data
     const streams = [...new Set(colleges.flatMap(c => c.streams).filter(Boolean))];
     const types = [...new Set(colleges.map(c => c.type).filter(Boolean))];
 
-    // Filter states based on search query - using stateUTs from context
     const filteredStates = stateUTs.filter(state =>
         state.toLowerCase().includes(stateSearchQuery.toLowerCase())
     );
 
-    // Check if any filters are active
     const hasActiveFilters = selectedState || selectedStream || selectedType ||
         cutoffRange[0] > 0 || cutoffRange[1] < 100;
 
-    // Apply filters
     const applyFilters = () => {
         setCutoffRange(tempCutoffRange);
         setHasAppliedFilters(true);
         setCurrentPage(1);
     };
 
-    // Reset all filters
     const resetFilters = () => {
         setSelectedState("");
         setSelectedStream("");
@@ -77,7 +71,6 @@ const FindCollege = () => {
         setStateSearchQuery("");
     };
 
-    // Fetch colleges when filters are applied or page changes
     useEffect(() => {
         const fetchColleges = async () => {
             const params = {
@@ -91,25 +84,23 @@ const FindCollege = () => {
             };
             await getColleges(params);
         };
-
         fetchColleges();
     }, [currentPage, selectedState, selectedStream, selectedType, cutoffRange]);
 
-    // Filter colleges based on search query (client-side filtering)
     const filteredColleges = colleges.filter(college => {
-        const matchesSearch = college.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        return (
+            college.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
             college.location?.city?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            college.location?.state?.toLowerCase().includes(searchQuery.toLowerCase());
-
-        return matchesSearch;
+            college.location?.state?.toLowerCase().includes(searchQuery.toLowerCase())
+        );
     });
 
-    const handleSaveCollege = (collegeId) => {
-        if (selectedColleges.includes(collegeId)) {
-            setSelectedColleges(selectedColleges.filter(id => id !== collegeId));
-        } else {
-            setSelectedColleges([...selectedColleges, collegeId]);
-        }
+    const toggleSave = (collegeId) => {
+        setSavedColleges(prev =>
+            prev.includes(collegeId)
+                ? prev.filter(id => id !== collegeId)
+                : [...prev, collegeId]
+        );
     };
 
     const handleViewDetails = (collegeId) => {
@@ -134,194 +125,189 @@ const FindCollege = () => {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
-            {/* Hero Section */}
-            <div className="relative bg-gradient-to-r from-gray-900 to-gray-700 text-white overflow-hidden">
+            {/* Hero Section with Blur Effect */}
+            <div className="relative bg-gradient-to-r from-gray-900 to-gray-600 text-white overflow-hidden">
                 <div className="absolute inset-0 bg-black/20" />
-                <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
+                <div className="relative max-w-6xl mx-auto px-4 py-12 sm:py-16">
                     <motion.div
-                        initial={{ opacity: 0, y: 20 }}
+                        initial={{ opacity: 0, y: 16 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="text-center max-w-3xl mx-auto"
+                        className="text-center max-w-2xl mx-auto"
                     >
-                        <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4">
+                        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2">
                             Find Your Perfect College
                         </h1>
-                        <p className="text-lg sm:text-xl text-gray-200 mb-8">
-                            Discover top colleges across India with comprehensive information about courses, fees, placements, and more
+                        <p className="text-sm sm:text-base text-gray-200 mb-6">
+                            Discover top colleges across India — courses, fees, placements & more
                         </p>
 
                         {/* Search Bar */}
-                        <div className="flex flex-col sm:flex-row gap-3 max-w-2xl mx-auto">
+                        <div className="flex gap-2 max-w-xl mx-auto">
                             <div className="flex-1 relative">
-                                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                                 <Input
                                     type="text"
-                                    placeholder="Search by college name or location..."
+                                    placeholder="Search by name or location..."
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
-                                    className="pl-10 py-6 bg-white text-gray-900 rounded-xl"
+                                    className="pl-9 py-2 h-10 bg-white text-gray-900 rounded-lg text-sm"
                                 />
                             </div>
                             <Button
                                 onClick={() => setShowFilters(!showFilters)}
-                                variant="secondary"
-                                className="bg-white/20 hover:bg-white/30 text-white border-white/30"
+                                size="sm"
+                                className="bg-white/20 hover:bg-white/30 text-white border border-white/30 h-10 px-3"
                             >
-                                <Filter className="h-4 w-4 mr-2" />
-                                Filters
+                                <Filter className="h-4 w-4 sm:mr-1.5" />
+                                <span className="hidden sm:inline text-sm">Filters</span>
                             </Button>
                         </div>
                     </motion.div>
                 </div>
+                {/* Gradient blur overlay at the bottom */}
+                <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-gray-50 via-gray-50/80 to-transparent" />
             </div>
 
-            {/* Filters Panel */}
+            {/* Filters Panel with Blur Effect */}
             <AnimatePresence>
                 {showFilters && (
                     <motion.div
-                        initial={{ opacity: 0, y: -20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -20 }}
-                        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-8 relative z-10"
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="border-b border-gray-200 bg-white/95 backdrop-blur-sm shadow-sm sticky top-0 z-20"
                     >
-                        <Card className="border-0 shadow-lg bg-white">
-                            <CardContent className="p-6">
-                                <div className="flex items-center justify-between mb-4">
-                                    <h3 className="font-semibold text-gray-900">Filter Colleges</h3>
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => setShowFilters(false)}
-                                        className="text-gray-500"
-                                    >
-                                        <X className="h-4 w-4" />
-                                    </Button>
-                                </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                                    <div>
-                                        <Label className="text-sm font-medium mb-2 block">State/UT</Label>
-                                        <div className="relative">
-                                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                                            <input
-                                                type="text"
-                                                placeholder="Search state or UT..."
-                                                value={stateSearchQuery}
-                                                onChange={(e) => setStateSearchQuery(e.target.value)}
-                                                className="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                            />
-                                        </div>
-                                        <select
-                                            value={selectedState}
-                                            onChange={(e) => setSelectedState(e.target.value)}
-                                            className="w-full p-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 mt-2"
-                                            size={Math.min(5, filteredStates.length)}
-                                        >
-                                            <option value="">All States/UTs</option>
-                                            {filteredStates.map(state => (
-                                                <option key={state} value={state}>{state}</option>
-                                            ))}
-                                        </select>
-                                        {filteredStates.length === 0 && stateSearchQuery && (
-                                            <p className="text-xs text-red-500 mt-1">No matching state/UT found</p>
-                                        )}
-                                    </div>
-                                    <div>
-                                        <Label className="text-sm font-medium mb-2 block">Stream</Label>
-                                        <select
-                                            value={selectedStream}
-                                            onChange={(e) => setSelectedStream(e.target.value)}
-                                            className="w-full p-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                        >
-                                            <option value="">All Streams</option>
-                                            {streams.map(stream => (
-                                                <option key={stream} value={stream}>{stream}</option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <Label className="text-sm font-medium mb-2 block">College Type</Label>
-                                        <select
-                                            value={selectedType}
-                                            onChange={(e) => setSelectedType(e.target.value)}
-                                            className="w-full p-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                        >
-                                            <option value="">All Types</option>
-                                            {types.map(type => (
-                                                <option key={type} value={type}>{type}</option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <Label className="text-sm font-medium mb-2 block">Cutoff Percentage</Label>
-                                        <Slider
-                                            min={0}
-                                            max={100}
-                                            step={1}
-                                            value={tempCutoffRange}
-                                            onValueChange={setTempCutoffRange}
-                                            className="mt-2"
+                        <div className="max-w-6xl mx-auto px-4 py-4">
+                            <div className="flex items-center justify-between mb-3">
+                                <h3 className="text-sm font-semibold text-gray-900">Filter Colleges</h3>
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => setShowFilters(false)}
+                                    className="h-7 w-7 p-0 text-gray-400"
+                                >
+                                    <X className="h-4 w-4" />
+                                </Button>
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                                {/* State/UT */}
+                                <div>
+                                    <Label className="text-xs font-medium mb-1.5 block text-gray-600">State/UT</Label>
+                                    <div className="relative mb-1.5">
+                                        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
+                                        <input
+                                            type="text"
+                                            placeholder="Search state..."
+                                            value={stateSearchQuery}
+                                            onChange={(e) => setStateSearchQuery(e.target.value)}
+                                            className="w-full pl-8 pr-3 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white/80"
                                         />
-                                        <div className="flex justify-between text-sm text-gray-600 mt-2">
-                                            <span>{tempCutoffRange[0]}%</span>
-                                            <span>{tempCutoffRange[1]}%</span>
-                                        </div>
                                     </div>
+                                    <select
+                                        value={selectedState}
+                                        onChange={(e) => setSelectedState(e.target.value)}
+                                        className="w-full p-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white/80"
+                                        size={Math.min(4, filteredStates.length + 1)}
+                                    >
+                                        <option value="">All States/UTs</option>
+                                        {filteredStates.map(state => (
+                                            <option key={state} value={state}>{state}</option>
+                                        ))}
+                                    </select>
+                                    {filteredStates.length === 0 && stateSearchQuery && (
+                                        <p className="text-xs text-red-500 mt-1">No matching state found</p>
+                                    )}
                                 </div>
 
-                                {/* Filter Action Buttons */}
-                                <div className="flex gap-3 mt-6 pt-4 border-t border-gray-100">
-                                    <Button
-                                        onClick={applyFilters}
-                                        className="flex-1 bg-gray-900 hover:bg-gray-800"
+                                {/* Stream */}
+                                <div>
+                                    <Label className="text-xs font-medium mb-1.5 block text-gray-600">Stream</Label>
+                                    <select
+                                        value={selectedStream}
+                                        onChange={(e) => setSelectedStream(e.target.value)}
+                                        className="w-full p-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white/80"
                                     >
-                                        <Sparkles className="h-4 w-4 mr-2" />
-                                        Apply Filters
-                                    </Button>
-                                    <Button
-                                        onClick={resetFilters}
-                                        variant="outline"
-                                        className="flex-1"
-                                    >
-                                        <RotateCcw className="h-4 w-4 mr-2" />
-                                        Reset Filters
-                                    </Button>
+                                        <option value="">All Streams</option>
+                                        {streams.map(stream => (
+                                            <option key={stream} value={stream}>{stream}</option>
+                                        ))}
+                                    </select>
                                 </div>
-                            </CardContent>
-                        </Card>
+
+                                {/* College Type */}
+                                <div>
+                                    <Label className="text-xs font-medium mb-1.5 block text-gray-600">College Type</Label>
+                                    <select
+                                        value={selectedType}
+                                        onChange={(e) => setSelectedType(e.target.value)}
+                                        className="w-full p-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white/80"
+                                    >
+                                        <option value="">All Types</option>
+                                        {types.map(type => (
+                                            <option key={type} value={type}>{type}</option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                {/* Cutoff */}
+                                <div>
+                                    <Label className="text-xs font-medium mb-1.5 block text-gray-600">
+                                        Cutoff: {tempCutoffRange[0]}% – {tempCutoffRange[1]}%
+                                    </Label>
+                                    <Slider
+                                        min={0}
+                                        max={100}
+                                        step={1}
+                                        value={tempCutoffRange}
+                                        onValueChange={setTempCutoffRange}
+                                        className="mt-3"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="flex gap-2 mt-4 pt-3 border-t border-gray-100">
+                                <Button
+                                    onClick={resetFilters}
+                                    variant="outline"
+                                    size="sm"
+                                    className="flex-1 text-sm h-8 cursor-pointer"
+                                >
+                                    <RotateCcw className="h-3.5 w-3.5 mr-1.5" />
+                                    Reset
+                                </Button>
+                                <Button
+                                    onClick={applyFilters}
+                                    size="sm"
+                                    className="flex-1 bg-gray-900 hover:bg-gray-800 text-sm h-8 cursor-pointer"
+                                >
+                                    <Sparkles className="h-3.5 w-3.5 mr-1.5" />
+                                    Apply Filters
+                                </Button>
+                            </div>
+                        </div>
                     </motion.div>
                 )}
             </AnimatePresence>
 
-            {/* Active Filters Display */}
+            {/* Active Filters */}
             {hasActiveFilters && (
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
-                    <div className="flex flex-wrap items-center gap-2 p-3 bg-blue-50 rounded-lg border border-blue-100">
-                        <span className="text-sm font-medium text-blue-700">Active Filters:</span>
-                        {selectedState && (
-                            <Badge className="bg-blue-100 text-blue-700">
-                                State: {selectedState}
-                            </Badge>
-                        )}
-                        {selectedStream && (
-                            <Badge className="bg-blue-100 text-blue-700">
-                                Stream: {selectedStream}
-                            </Badge>
-                        )}
-                        {selectedType && (
-                            <Badge className="bg-blue-100 text-blue-700">
-                                Type: {selectedType}
-                            </Badge>
-                        )}
+                <div className="max-w-6xl mx-auto px-4 mt-3">
+                    <div className="flex flex-wrap items-center gap-1.5 p-2.5 bg-blue-50/80 backdrop-blur-sm rounded-lg border border-blue-100">
+                        <span className="text-xs font-medium text-blue-700">Active:</span>
+                        {selectedState && <Badge className="text-xs h-5 bg-blue-100 text-blue-700 hover:bg-blue-100">State: {selectedState}</Badge>}
+                        {selectedStream && <Badge className="text-xs h-5 bg-blue-100 text-blue-700 hover:bg-blue-100">Stream: {selectedStream}</Badge>}
+                        {selectedType && <Badge className="text-xs h-5 bg-blue-100 text-blue-700 hover:bg-blue-100">Type: {selectedType}</Badge>}
                         {(cutoffRange[0] > 0 || cutoffRange[1] < 100) && (
-                            <Badge className="bg-blue-100 text-blue-700">
-                                Cutoff: {cutoffRange[0]}% - {cutoffRange[1]}%
+                            <Badge className="text-xs h-5 bg-blue-100 text-blue-700 hover:bg-blue-100">
+                                Cutoff: {cutoffRange[0]}%–{cutoffRange[1]}%
                             </Badge>
                         )}
                         <Button
                             variant="ghost"
                             size="sm"
                             onClick={resetFilters}
-                            className="ml-auto text-blue-700 hover:text-blue-800 hover:bg-blue-100"
+                            className="ml-auto h-6 text-xs text-blue-700 hover:text-blue-800 hover:bg-blue-100 px-2"
                         >
                             <RotateCcw className="h-3 w-3 mr-1" />
                             Clear All
@@ -330,184 +316,189 @@ const FindCollege = () => {
                 </div>
             )}
 
-            {/* Results Section */}
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-                <div className="flex justify-between items-center mb-6">
+            {/* Results Section with Background Blur */}
+            <div className="max-w-6xl mx-auto px-4 py-6">
+                <div className="flex justify-between items-center mb-4">
                     <div>
-                        <h2 className="text-2xl font-bold text-gray-900">
+                        <h2 className="text-base sm:text-lg font-bold text-gray-900">
                             {loading ? "Loading..." : `${filteredColleges.length} Colleges Found`}
                         </h2>
-                        <p className="text-gray-500 mt-1">Based on your preferences</p>
+                        <p className="text-xs text-gray-500">Based on your preferences</p>
                     </div>
                 </div>
 
                 {loading ? (
-                    <div className="flex justify-center items-center py-20">
-                        <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+                    <div className="flex justify-center items-center py-16">
+                        <Loader2 className="h-7 w-7 animate-spin text-blue-500" />
                     </div>
                 ) : (
                     <>
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                            {filteredColleges.map((college, index) => (
-                                <motion.div
-                                    key={college._id}
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: index * 0.05 }}
-                                    whileHover={{ y: -8 }}
-                                    className="perspective-1000"
-                                >
-                                    <Card className="border-0 shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden group transform-gpu hover:rotate-x-2">
-                                        <CardHeader className="pb-3 bg-gradient-to-br from-white to-gray-50/50">
-                                            <div className="flex justify-between items-start">
-                                                <div className="flex-1">
-                                                    <CardTitle className="text-xl mb-2 transition-colors group-hover:text-blue-600 line-clamp-2">
-                                                        {college.name}
-                                                    </CardTitle>
-                                                    <div className="flex items-center gap-2 text-sm text-gray-500">
-                                                        <MapPin className="h-4 w-4" />
-                                                        {college.location?.city}, {college.location?.state}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {filteredColleges.map((college, index) => {
+                                const isSaved = savedColleges.includes(college._id);
+                                return (
+                                    <motion.div
+                                        key={college._id}
+                                        initial={{ opacity: 0, y: 12 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: index * 0.04 }}
+                                    >
+                                        <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden bg-white/90 backdrop-blur-sm">
+                                            <CardHeader className="pb-2 pt-4 px-4">
+                                                <div className="flex justify-between items-start gap-2">
+                                                    <div className="flex-1 min-w-0">
+                                                        <CardTitle className="text-sm sm:text-base font-semibold leading-snug line-clamp-2 text-gray-900">
+                                                            {college.name}
+                                                        </CardTitle>
+                                                        <div className="flex items-center gap-1 text-xs text-gray-500 mt-1">
+                                                            <MapPin className="h-3 w-3 flex-shrink-0" />
+                                                            <span className="truncate">
+                                                                {college.location?.city}, {college.location?.state}
+                                                            </span>
+                                                        </div>
                                                     </div>
-                                                </div>
-                                                <div className="flex gap-2">
-                                                    <Button
-                                                        size="icon"
-                                                        variant="ghost"
-                                                        className="hover:bg-red-50 hover:scale-110 transition-transform"
-                                                        onClick={() => handleSaveCollege(college._id)}
-                                                    >
-                                                        <Heart className={`h-5 w-5 transition-all ${selectedColleges.includes(college._id) ? 'fill-red-500 text-red-500 scale-110' : 'text-gray-400'}`} />
-                                                    </Button>
-                                                    <Button size="icon" variant="ghost" className="hover:bg-gray-100 hover:scale-110 transition-transform">
-                                                        <Share2 className="h-5 w-5 text-gray-400" />
-                                                    </Button>
-                                                </div>
-                                            </div>
-                                        </CardHeader>
-
-                                        <CardContent className="space-y-4 pt-4">
-                                            {/* Quick Stats Row - Enhanced with 3D effect */}
-                                            <div className="grid grid-cols-2 gap-3">
-                                                <div className="relative overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-3 text-center border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 group/stat">
-                                                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover/stat:translate-x-[100%] transition-transform duration-700" />
-                                                    <div className="flex items-center justify-between mb-1">
-                                                        <span className="text-xs text-gray-500">Cutoff</span>
-                                                        <TrendingUp className="h-3 w-3 text-green-500" />
-                                                    </div>
-                                                    <p className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
-                                                        {college.cutoff}%
-                                                    </p>
-                                                    <p className="text-xs text-green-600 mt-1">Required Score</p>
-                                                </div>
-                                                <div className="relative overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-3 text-center border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 group/stat">
-                                                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover/stat:translate-x-[100%] transition-transform duration-700" />
-                                                    <div className="flex items-center justify-between mb-1">
-                                                        <span className="text-xs text-gray-500">Type</span>
-                                                        <Building2 className="h-3 w-3 text-blue-500" />
-                                                    </div>
-                                                    <p className="text-base font-semibold text-gray-900 truncate">
-                                                        {college.type}
-                                                    </p>
-                                                    <p className="text-xs text-gray-500 mt-1">Institution</p>
-                                                </div>
-                                            </div>
-
-                                            {/* Streams Tags - Enhanced */}
-                                            <div className="space-y-1.5">
-                                                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Streams</p>
-                                                <div className="flex flex-wrap gap-1.5">
-                                                    {college.streams?.slice(0, 3).map((stream, idx) => (
-                                                        <Badge
-                                                            key={idx}
-                                                            variant="outline"
-                                                            className="text-xs bg-gradient-to-r from-gray-50 to-white border-gray-200 hover:border-blue-300 hover:shadow-sm transition-all duration-200"
+                                                    <div className="flex gap-1 flex-shrink-0">
+                                                        {/* Star button — synced with bookmark */}
+                                                        <span
+                                                            className="p-1.5 rounded-md transition-colors"
                                                         >
-                                                            {stream}
-                                                        </Badge>
-                                                    ))}
-                                                    {college.streams?.length > 3 && (
-                                                        <Badge variant="outline" className="text-xs bg-gray-100 border-gray-200 hover:bg-gray-200 transition-colors">
-                                                            +{college.streams.length - 3} more
-                                                        </Badge>
-                                                    )}
+                                                            <FaStar
+                                                                className={`h-5 w-5 transition-colors ${isSaved
+                                                                    ? "text-yellow-400 fill-yellow-400"
+                                                                    : "text-gray-300"
+                                                                    }`}
+                                                            />
+                                                        </span>
+                                                        <button
+                                                            className="p-1.5 rounded-md hover:bg-gray-100 transition-colors"
+                                                            aria-label="Share"
+                                                        >
+                                                            <Share2 className="h-4 w-4 text-gray-400" />
+                                                        </button>
+                                                    </div>
                                                 </div>
-                                            </div>
+                                            </CardHeader>
 
-                                            {/* Action Buttons - Enhanced */}
-                                            <div className="flex gap-2 pt-2">
-                                                <Button
-                                                    size="sm"
-                                                    className="flex-1 bg-gradient-to-r from-gray-900 to-gray-800 hover:from-gray-800 hover:to-gray-700 text-sm shadow-md hover:shadow-lg transform hover:scale-[1.02] transition-all duration-300"
-                                                    onClick={() => handleViewDetails(college._id)}
-                                                >
-                                                    View Details
-                                                    <ExternalLink className="h-3.5 w-3.5 ml-1.5 group-hover:translate-x-1 transition-transform" />
-                                                </Button>
-                                                <Button
-                                                    size="sm"
-                                                    variant="outline"
-                                                    className="px-3 hover:scale-105 transition-transform duration-300 hover:border-red-200 hover:bg-red-50 group"
-                                                    onClick={() => handleSaveCollege(college._id)}
-                                                >
-                                                    <Heart className={`h-3.5 w-3.5 transition-all ${selectedColleges.includes(college._id) ? 'fill-red-500 text-red-500' : 'text-gray-500 group-hover:text-red-500'}`} />
-                                                </Button>
-                                            </div>
-                                        </CardContent>
-                                    </Card>
-                                </motion.div>
-                            ))}
+                                            <CardContent className="px-4 pb-4 space-y-3">
+                                                {/* Stats Row */}
+                                                <div className="grid grid-cols-2 gap-2">
+                                                    <div className="bg-gray-50/80 backdrop-blur-sm rounded-lg p-2.5 border border-gray-100">
+                                                        <div className="flex items-center justify-between mb-0.5">
+                                                            <span className="text-xs text-gray-500">Cutoff</span>
+                                                            <TrendingUp className="h-3 w-3 text-green-500" />
+                                                        </div>
+                                                        <p className="text-lg font-bold text-gray-900 leading-none">
+                                                            {college.cutoff}%
+                                                        </p>
+                                                        <p className="text-xs text-green-600 mt-0.5">Required Score</p>
+                                                    </div>
+                                                    <div className="bg-gray-50/80 backdrop-blur-sm rounded-lg p-2.5 border border-gray-100">
+                                                        <div className="flex items-center justify-between mb-0.5">
+                                                            <span className="text-xs text-gray-500">Type</span>
+                                                            <Building2 className="h-3 w-3 text-blue-500" />
+                                                        </div>
+                                                        <p className="text-sm font-semibold text-gray-900 truncate leading-tight">
+                                                            {college.type}
+                                                        </p>
+                                                        <p className="text-xs text-gray-500 mt-0.5">Institution</p>
+                                                    </div>
+                                                </div>
+
+                                                {/* Streams */}
+                                                <div>
+                                                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Streams</p>
+                                                    <div className="flex flex-wrap gap-1">
+                                                        {college.streams?.slice(0, 3).map((stream, idx) => (
+                                                            <Badge
+                                                                key={idx}
+                                                                variant="outline"
+                                                                className="text-xs h-5 px-1.5 bg-white/80 border-gray-200 text-gray-600"
+                                                            >
+                                                                {stream}
+                                                            </Badge>
+                                                        ))}
+                                                        {college.streams?.length > 3 && (
+                                                            <Badge variant="outline" className="text-xs h-5 px-1.5 bg-gray-100/80 border-gray-200 text-gray-500">
+                                                                +{college.streams.length - 3}
+                                                            </Badge>
+                                                        )}
+                                                    </div>
+                                                </div>
+
+                                                {/* Actions */}
+                                                <div className="flex gap-2 pt-1">
+                                                    <Button
+                                                        size="sm"
+                                                        className="flex-1 h-8 text-xs bg-gray-900 hover:bg-gray-800"
+                                                        onClick={() => handleViewDetails(college._id)}
+                                                    >
+                                                        View Details
+                                                        <ExternalLink className="h-3 w-3 ml-1.5" />
+                                                    </Button>
+                                                    {/* Bookmark button — synced with star */}
+                                                    <button
+                                                        onClick={() => toggleSave(college._id)}
+                                                        className={`h-8 w-8 flex items-center justify-center rounded-md border transition-colors ${isSaved
+                                                            ? "border-gray-900 bg-gray-900 text-white"
+                                                            : "border-gray-200 hover:border-gray-300 text-gray-500 hover:bg-gray-50"
+                                                            }`}
+                                                        aria-label="Bookmark college"
+                                                    >
+                                                        <FaBookmark className="h-3.5 w-3.5" />
+                                                    </button>
+                                                </div>
+                                            </CardContent>
+                                        </Card>
+                                    </motion.div>
+                                );
+                            })}
                         </div>
 
-                        {/* Enhanced Pagination */}
+                        {/* Pagination */}
                         {pagination && pagination.totalPages > 1 && (
-                            <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mt-8">
-                                <div className="flex gap-2">
+                            <div className="flex flex-col sm:flex-row justify-center items-center gap-3 mt-6">
+                                <div className="flex items-center gap-1">
                                     <Button
                                         variant="outline"
                                         size="sm"
                                         onClick={() => handlePageChange(currentPage - 1)}
                                         disabled={currentPage === 1}
-                                        className="px-3 hover:scale-105 transition-transform"
+                                        className="h-8 w-8 p-0"
                                     >
                                         <ChevronLeft className="h-4 w-4" />
                                     </Button>
 
-                                    {/* Page numbers */}
-                                    <div className="flex gap-2">
+                                    <div className="flex gap-1">
                                         {(() => {
                                             const totalPages = pagination.totalPages;
                                             const current = currentPage;
                                             let pages = [];
 
                                             if (totalPages <= 7) {
-                                                for (let i = 1; i <= totalPages; i++) {
-                                                    pages.push(i);
-                                                }
+                                                for (let i = 1; i <= totalPages; i++) pages.push(i);
+                                            } else if (current <= 3) {
+                                                pages = [1, 2, 3, 4, '...', totalPages];
+                                            } else if (current >= totalPages - 2) {
+                                                pages = [1, '...', totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
                                             } else {
-                                                if (current <= 3) {
-                                                    pages = [1, 2, 3, 4, '...', totalPages];
-                                                } else if (current >= totalPages - 2) {
-                                                    pages = [1, '...', totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
-                                                } else {
-                                                    pages = [1, '...', current - 1, current, current + 1, '...', totalPages];
-                                                }
+                                                pages = [1, '...', current - 1, current, current + 1, '...', totalPages];
                                             }
 
-                                            return pages.map((page, idx) => (
+                                            return pages.map((page, idx) =>
                                                 page === '...' ? (
-                                                    <span key={idx} className="px-3 py-2 text-gray-500">...</span>
+                                                    <span key={idx} className="px-2 py-1 text-xs text-gray-400">...</span>
                                                 ) : (
                                                     <Button
                                                         key={idx}
                                                         variant={currentPage === page ? "default" : "outline"}
                                                         size="sm"
                                                         onClick={() => handlePageChange(page)}
-                                                        className={currentPage === page ? "bg-gray-900 hover:bg-gray-800 shadow-md" : "hover:scale-105 transition-transform"}
+                                                        className={`h-8 w-8 p-0 text-xs ${currentPage === page ? "bg-gray-900 hover:bg-gray-800" : ""}`}
                                                     >
                                                         {page}
                                                     </Button>
                                                 )
-                                            ));
+                                            );
                                         })()}
                                     </div>
 
@@ -516,36 +507,33 @@ const FindCollege = () => {
                                         size="sm"
                                         onClick={() => handlePageChange(currentPage + 1)}
                                         disabled={currentPage === pagination.totalPages}
-                                        className="px-3 hover:scale-105 transition-transform"
+                                        className="h-8 w-8 p-0"
                                     >
                                         <ChevronRight className="h-4 w-4" />
                                     </Button>
                                 </div>
 
-                                {/* Page input */}
-                                <form onSubmit={handlePageInputSubmit} className="flex items-center gap-2">
-                                    <span className="text-sm text-gray-500">Go to page</span>
+                                <form onSubmit={handlePageInputSubmit} className="flex items-center gap-1.5">
+                                    <span className="text-xs text-gray-500">Go to</span>
                                     <input
                                         type="number"
                                         value={pageInput}
                                         onChange={(e) => setPageInput(e.target.value)}
                                         min={1}
                                         max={pagination.totalPages}
-                                        className="w-16 px-2 py-1 border border-gray-300 rounded-md text-center focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        className="w-14 px-2 py-1 text-xs border border-gray-300 rounded-md text-center focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white/80"
                                         placeholder="..."
                                     />
-                                    <Button type="submit" size="sm" variant="outline" className="hover:scale-105 transition-transform">
-                                        Go
-                                    </Button>
+                                    <Button type="submit" size="sm" variant="outline" className="h-7 text-xs px-2">Go</Button>
                                 </form>
                             </div>
                         )}
 
                         {filteredColleges.length === 0 && (
                             <div className="text-center py-12">
-                                <Building2 className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-                                <h3 className="text-lg font-medium text-gray-900 mb-2">No colleges found</h3>
-                                <p className="text-gray-500">Try adjusting your filters or search criteria</p>
+                                <Building2 className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+                                <h3 className="text-sm font-medium text-gray-900 mb-1">No colleges found</h3>
+                                <p className="text-xs text-gray-500">Try adjusting your filters or search criteria</p>
                             </div>
                         )}
                     </>
