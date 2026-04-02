@@ -20,15 +20,23 @@ const getColleges = asyncHandler(async (req, res) => {
         stream,
         minCutoff,
         maxCutoff,
+        search,
     } = req.query;
 
-    // Convert to numbers
-    page = Number(page);
-    limit = Number(limit);
-
+    page = Math.max(1, Number(page));
+    limit = Math.max(1, Number(limit));
     const skip = (page - 1) * limit;
 
-    // 🔍 Build filter object
+    state = state?.trim();
+    city = city?.trim();
+    type = type?.trim();
+    stream = stream?.trim();
+    search = search?.trim();
+
+    // Escape special characters in search string for regex
+    const escapeRegex = (text) =>
+        text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
     const filter = {};
 
     if (state) filter["location.state"] = state;
@@ -42,19 +50,32 @@ const getColleges = asyncHandler(async (req, res) => {
         if (maxCutoff) filter.cutoff.$lte = Number(maxCutoff);
     }
 
-    // 🔎 Query DB
-    const colleges = await College.find(filter).select("name location type streams cutoff")
-        .skip(skip)
-        .limit(limit)
-        .sort({ createdAt: -1 })
-        .lean(); // returns plain JS objects instead of Mongoose documents which increases performance for read operations
+    if (search) {
+        const safeSearch = escapeRegex(search);
 
-    const total = await College.countDocuments(filter);
+        filter.$or = [
+            { name: { $regex: safeSearch, $options: "i" } },
+            { collegeId: { $regex: safeSearch, $options: "i" } },
+            { "location.city": { $regex: safeSearch, $options: "i" } },
+            { "location.state": { $regex: safeSearch, $options: "i" } },
+        ];
+    }
 
-    const state_uts = await College.distinct("location.state"); // fetch distinct states/UTs for filter dropdown
+    // Executing queries in parallel for better performance
+    const [colleges, total, state_uts] = await Promise.all([
+        College.find(filter)
+            .select("name location type streams cutoff")
+            .skip(skip)
+            .limit(limit)
+            .sort({ createdAt: -1 })
+            .lean(),
 
+        College.countDocuments(filter),
 
-    console.log(`Fetcghed ${colleges.length} colleges with filter:`, filter);
+        College.distinct("location.state"),
+    ]);
+
+    console.log(`Fetched ${colleges.length} colleges with filter:`, filter);
 
     return res.status(200).json(
         new ApiResponse(

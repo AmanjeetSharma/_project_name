@@ -1,5 +1,5 @@
 // pages/FindCollege.jsx
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import {
@@ -15,7 +15,8 @@ import {
     ChevronLeft,
     ChevronRight,
     RotateCcw,
-    Sparkles
+    Sparkles,
+    ChevronDown
 } from "lucide-react";
 import { FaBookmark } from "react-icons/fa6";
 import { FaStar } from "react-icons/fa";
@@ -30,8 +31,9 @@ import { useCollege } from "../../context/CollegeContext";
 
 const FindCollege = () => {
     const navigate = useNavigate();
-    const { loading, colleges, pagination, getColleges, stateUTs } = useCollege();
+    const { loading, colleges, pagination, getColleges, stateUTs, filters: globalFilters } = useCollege();
 
+    // Search & Filter States
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedState, setSelectedState] = useState("");
     const [selectedStream, setSelectedStream] = useState("");
@@ -39,14 +41,32 @@ const FindCollege = () => {
     const [showFilters, setShowFilters] = useState(false);
     const [cutoffRange, setCutoffRange] = useState([0, 100]);
     const [tempCutoffRange, setTempCutoffRange] = useState([0, 100]);
+
+    // Applied Filters (only these trigger API calls)
+    const [appliedFilters, setAppliedFilters] = useState({});
+    const [hasAppliedFilters, setHasAppliedFilters] = useState(false);
+
+    // UI States
     const [savedColleges, setSavedColleges] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
     const [pageInput, setPageInput] = useState("");
-    const [hasAppliedFilters, setHasAppliedFilters] = useState(false);
     const [stateSearchQuery, setStateSearchQuery] = useState("");
+    const [allCollegesCache, setAllCollegesCache] = useState([]);
+    const [isInitialLoad, setIsInitialLoad] = useState(true);
 
-    const streams = [...new Set(colleges.flatMap(c => c.streams).filter(Boolean))];
-    const types = [...new Set(colleges.map(c => c.type).filter(Boolean))];
+    // Refs to prevent double API calls in Strict Mode
+    const hasFetchedInitialRef = useRef(false);
+    const isFilterOrPageChangeRef = useRef(false);
+
+    // State dropdown states
+    const [isStateDropdownOpen, setIsStateDropdownOpen] = useState(false);
+    const [highlightedStateIndex, setHighlightedStateIndex] = useState(-1);
+    const stateDropdownRef = useRef(null);
+    const stateSearchInputRef = useRef(null);
+
+    // Use global filters if available, otherwise generate from cached data
+    const streams = globalFilters?.streams || [...new Set(allCollegesCache.flatMap(c => c.streams).filter(Boolean))];
+    const types = globalFilters?.types || [...new Set(allCollegesCache.map(c => c.type).filter(Boolean))];
 
     const filteredStates = stateUTs.filter(state =>
         state.toLowerCase().includes(stateSearchQuery.toLowerCase())
@@ -55,53 +75,162 @@ const FindCollege = () => {
     const hasActiveFilters = selectedState || selectedStream || selectedType ||
         cutoffRange[0] > 0 || cutoffRange[1] < 100;
 
+    // Close dropdown when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (stateDropdownRef.current && !stateDropdownRef.current.contains(event.target)) {
+                setIsStateDropdownOpen(false);
+                setHighlightedStateIndex(-1);
+            }
+        };
+
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+    // Handle keyboard navigation for state dropdown
+    useEffect(() => {
+        if (!isStateDropdownOpen) return;
+
+        const handleKeyDown = (e) => {
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                setHighlightedStateIndex(prev =>
+                    prev < filteredStates.length - 1 ? prev + 1 : prev
+                );
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                setHighlightedStateIndex(prev => prev > 0 ? prev - 1 : -1);
+            } else if (e.key === 'Enter' && highlightedStateIndex >= 0) {
+                e.preventDefault();
+                const selected = filteredStates[highlightedStateIndex];
+                if (selected) {
+                    setSelectedState(selected);
+                    setStateSearchQuery("");
+                    setIsStateDropdownOpen(false);
+                    setHighlightedStateIndex(-1);
+                }
+            } else if (e.key === 'Escape') {
+                setIsStateDropdownOpen(false);
+                setHighlightedStateIndex(-1);
+            }
+        };
+
+        document.addEventListener('keydown', handleKeyDown);
+        return () => document.removeEventListener('keydown', handleKeyDown);
+    }, [isStateDropdownOpen, filteredStates, highlightedStateIndex]);
+
+    // Apply Filters - only triggers API when clicked
     const applyFilters = () => {
+        const filters = {
+            ...(selectedState && { state: selectedState }),
+            ...(selectedStream && { stream: selectedStream }),
+            ...(selectedType && { type: selectedType }),
+            ...(tempCutoffRange[0] > 0 && { minCutoff: tempCutoffRange[0] }),
+            ...(tempCutoffRange[1] < 100 && { maxCutoff: tempCutoffRange[1] }),
+            ...(searchQuery && { search: searchQuery }),
+        };
+
         setCutoffRange(tempCutoffRange);
-        setHasAppliedFilters(true);
+        setAppliedFilters(filters);
         setCurrentPage(1);
+        setHasAppliedFilters(true);
+        setIsInitialLoad(false);
+        isFilterOrPageChangeRef.current = true;
+
+        // Close filters panel after applying (optional)
+        setShowFilters(false);
     };
 
+    // Handle Search button click
+    const handleSearch = () => {
+        const filters = {
+            ...(selectedState && { state: selectedState }),
+            ...(selectedStream && { stream: selectedStream }),
+            ...(selectedType && { type: selectedType }),
+            ...(cutoffRange[0] > 0 && { minCutoff: cutoffRange[0] }),
+            ...(cutoffRange[1] < 100 && { maxCutoff: cutoffRange[1] }),
+            ...(searchQuery && { search: searchQuery }),
+        };
+
+        setAppliedFilters(filters);
+        setCurrentPage(1);
+        setIsInitialLoad(false);
+        isFilterOrPageChangeRef.current = true;
+    };
+
+    // Reset all filters
     const resetFilters = () => {
         setSelectedState("");
         setSelectedStream("");
         setSelectedType("");
+        setSearchQuery("");
         setTempCutoffRange([0, 100]);
         setCutoffRange([0, 100]);
+        setAppliedFilters({});
         setHasAppliedFilters(false);
         setCurrentPage(1);
         setStateSearchQuery("");
+        setIsInitialLoad(false);
+        setIsStateDropdownOpen(false);
+        setHighlightedStateIndex(-1);
+        isFilterOrPageChangeRef.current = true;
+
+        // Fetch with empty filters
+        getColleges({ page: 1, limit: 10 });
     };
 
+    // Cache colleges data for filter options
     useEffect(() => {
+        if (colleges.length && allCollegesCache.length === 0) {
+            setAllCollegesCache(colleges);
+        }
+    }, [colleges, allCollegesCache]);
+
+    // Initial load - fetch colleges when component mounts (with double-call protection)
+    useEffect(() => {
+        // Prevent double API call in React Strict Mode
+        if (hasFetchedInitialRef.current) return;
+
+        hasFetchedInitialRef.current = true;
+
+        const fetchInitialColleges = async () => {
+            await getColleges({ page: 1, limit: 10 });
+            setIsInitialLoad(false);
+        };
+
+        fetchInitialColleges();
+    }, []); // Empty dependency array - runs once on mount
+
+    // API call only on: appliedFilters change OR pagination change
+    // Removed isInitialLoad from dependencies to prevent second trigger
+    useEffect(() => {
+        // Skip if it's initial load (already handled above)
+        if (isInitialLoad) return;
+
+        // Skip if this is triggered by the initial load flag change
+        if (!isFilterOrPageChangeRef.current) return;
+
+        // Reset the flag
+        isFilterOrPageChangeRef.current = false;
+
         const fetchColleges = async () => {
             const params = {
                 page: currentPage,
                 limit: 10,
-                ...(selectedState && { state: selectedState }),
-                ...(selectedStream && { stream: selectedStream }),
-                ...(selectedType && { type: selectedType }),
-                ...(cutoffRange[0] > 0 && { minCutoff: cutoffRange[0] }),
-                ...(cutoffRange[1] < 100 && { maxCutoff: cutoffRange[1] }),
+                ...appliedFilters,
             };
             await getColleges(params);
         };
-        fetchColleges();
-    }, [currentPage, selectedState, selectedStream, selectedType, cutoffRange]);
 
-    const filteredColleges = colleges.filter(college => {
-        return (
-            college.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            college.location?.city?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            college.location?.state?.toLowerCase().includes(searchQuery.toLowerCase())
-        );
-    });
+        fetchColleges();
+    }, [currentPage, appliedFilters, isInitialLoad]);
 
     const toggleSave = (collegeId) => {
         setSavedColleges(prev => {
             const isSaved = prev.includes(collegeId);
 
             if (!isSaved) {
-                // Only show toast when adding/ saving
                 schadenToast.success("College Bookmarked", {
                     duration: 1500,
                     position: "top-center",
@@ -122,6 +251,7 @@ const FindCollege = () => {
         if (page >= 1 && page <= (pagination?.totalPages || 1)) {
             setCurrentPage(page);
             setPageInput("");
+            isFilterOrPageChangeRef.current = true; // Mark as intentional page change
         }
     };
 
@@ -131,6 +261,28 @@ const FindCollege = () => {
         if (!isNaN(pageNum) && pageNum >= 1 && pageNum <= (pagination?.totalPages || 1)) {
             setCurrentPage(pageNum);
             setPageInput("");
+            isFilterOrPageChangeRef.current = true; // Mark as intentional page change
+        }
+    };
+
+    // Handle state selection
+    const handleStateSelect = (state) => {
+        setSelectedState(state);
+        setStateSearchQuery("");
+        setIsStateDropdownOpen(false);
+        setHighlightedStateIndex(-1);
+    };
+
+    // Toggle dropdown when clicking the down button or search input
+    const toggleStateDropdown = () => {
+        setIsStateDropdownOpen(!isStateDropdownOpen);
+        if (!isStateDropdownOpen) {
+            setTimeout(() => {
+                stateSearchInputRef.current?.focus();
+            }, 0);
+        } else {
+            setStateSearchQuery("");
+            setHighlightedStateIndex(-1);
         }
     };
 
@@ -152,18 +304,8 @@ const FindCollege = () => {
                             Discover top colleges across India — courses, fees, placements & more
                         </p>
 
-                        {/* Search Bar */}
+                        {/* Search Bar with Search Button */}
                         <div className="flex gap-2 max-w-xl mx-auto">
-                            <div className="flex-1 relative">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                                <Input
-                                    type="text"
-                                    placeholder="Search by name or location..."
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                    className="pl-9 py-2 h-10 bg-white text-gray-900 rounded-lg text-sm"
-                                />
-                            </div>
                             <Button
                                 onClick={() => setShowFilters(!showFilters)}
                                 size="sm"
@@ -171,6 +313,25 @@ const FindCollege = () => {
                             >
                                 <Filter className="h-4 w-4 sm:mr-1.5" />
                                 <span className="hidden sm:inline text-sm">Filters</span>
+                            </Button>
+                            <div className="flex-1 relative">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                <Input
+                                    type="text"
+                                    placeholder="Search by name or location..."
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                                    className="pl-9 py-2 h-10 bg-white text-gray-900 rounded-lg text-sm"
+                                />
+                            </div>
+                            <Button
+                                onClick={handleSearch}
+                                size="sm"
+                                className="bg-white/20 hover:bg-white/30 text-white border border-white/30 h-10 px-4"
+                            >
+                                <Search className="h-4 w-4 sm:mr-1.5" />
+                                <span className="hidden sm:inline text-sm">Search</span>
                             </Button>
                         </div>
                     </motion.div>
@@ -202,32 +363,75 @@ const FindCollege = () => {
                             </div>
 
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                                {/* State/UT */}
+                                {/* State/UT - Custom Dropdown */}
                                 <div>
                                     <Label className="text-xs font-medium mb-1.5 block text-gray-600">State/UT</Label>
-                                    <div className="relative mb-1.5">
-                                        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
-                                        <input
-                                            type="text"
-                                            placeholder="Search state..."
-                                            value={stateSearchQuery}
-                                            onChange={(e) => setStateSearchQuery(e.target.value)}
-                                            className="w-full pl-8 pr-3 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white/80"
-                                        />
+                                    <div className="relative" ref={stateDropdownRef}>
+                                        <div className="relative">
+                                            <input
+                                                ref={stateSearchInputRef}
+                                                type="text"
+                                                placeholder="Search state..."
+                                                value={stateSearchQuery}
+                                                onChange={(e) => {
+                                                    setStateSearchQuery(e.target.value);
+                                                    if (!isStateDropdownOpen) setIsStateDropdownOpen(true);
+                                                }}
+                                                onFocus={() => !isStateDropdownOpen && setIsStateDropdownOpen(true)}
+                                                className="w-full pl-3 pr-8 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white/80"
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={toggleStateDropdown}
+                                                className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 hover:bg-gray-100 rounded transition-colors"
+                                            >
+                                                <ChevronDown className={`h-4 w-4 text-gray-500 transition-transform duration-200 ${isStateDropdownOpen ? 'rotate-180' : ''}`} />
+                                            </button>
+                                        </div>
+
+                                        {/* Dropdown Menu */}
+                                        {isStateDropdownOpen && (
+                                            <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                                                {filteredStates.length > 0 ? (
+                                                    filteredStates.map((state, idx) => (
+                                                        <button
+                                                            key={state}
+                                                            type="button"
+                                                            onClick={() => handleStateSelect(state)}
+                                                            onMouseEnter={() => setHighlightedStateIndex(idx)}
+                                                            className={`w-full text-left px-3 py-2 text-sm transition-colors ${selectedState === state
+                                                                ? 'bg-blue-50 text-blue-700'
+                                                                : highlightedStateIndex === idx
+                                                                    ? 'bg-gray-50 text-gray-900'
+                                                                    : 'text-gray-700 hover:bg-gray-50'
+                                                                }`}
+                                                        >
+                                                            {state}
+                                                            {selectedState === state && (
+                                                                <span className="float-right text-blue-600">✓</span>
+                                                            )}
+                                                        </button>
+                                                    ))
+                                                ) : (
+                                                    <div className="px-3 py-2 text-sm text-gray-500 text-center">
+                                                        No matching states found
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
                                     </div>
-                                    <select
-                                        value={selectedState}
-                                        onChange={(e) => setSelectedState(e.target.value)}
-                                        className="w-full p-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white/80"
-                                        size={Math.min(4, filteredStates.length + 1)}
-                                    >
-                                        <option value="">All States/UTs</option>
-                                        {filteredStates.map(state => (
-                                            <option key={state} value={state}>{state}</option>
-                                        ))}
-                                    </select>
-                                    {filteredStates.length === 0 && stateSearchQuery && (
-                                        <p className="text-xs text-red-500 mt-1">No matching state found</p>
+                                    {selectedState && (
+                                        <div className="mt-1">
+                                            <Badge className="text-xs bg-blue-100 text-blue-700">
+                                                Selected: {selectedState}
+                                                <button
+                                                    onClick={() => setSelectedState("")}
+                                                    className="ml-1 hover:text-blue-900"
+                                                >
+                                                    ×
+                                                </button>
+                                            </Badge>
+                                        </div>
                                     )}
                                 </div>
 
@@ -301,7 +505,7 @@ const FindCollege = () => {
                 )}
             </AnimatePresence>
 
-            {/* Active Filters */}
+            {/* Active Filters Display */}
             {hasActiveFilters && (
                 <div className="max-w-6xl mx-auto px-4 mt-3">
                     <div className="flex flex-wrap items-center gap-1.5 p-2.5 bg-blue-50/80 backdrop-blur-sm rounded-lg border border-blue-100">
@@ -312,6 +516,11 @@ const FindCollege = () => {
                         {(cutoffRange[0] > 0 || cutoffRange[1] < 100) && (
                             <Badge className="text-xs h-5 bg-blue-100 text-blue-700 hover:bg-blue-100">
                                 Cutoff: {cutoffRange[0]}%–{cutoffRange[1]}%
+                            </Badge>
+                        )}
+                        {searchQuery && (
+                            <Badge className="text-xs h-5 bg-blue-100 text-blue-700 hover:bg-blue-100">
+                                Search: {searchQuery}
                             </Badge>
                         )}
                         <Button
@@ -327,14 +536,16 @@ const FindCollege = () => {
                 </div>
             )}
 
-            {/* Results Section with Background Blur */}
+            {/* Results Section */}
             <div className="max-w-6xl mx-auto px-4 py-6">
                 <div className="flex justify-between items-center mb-4">
                     <div>
                         <h2 className="text-base sm:text-lg font-bold text-gray-900">
-                            {loading ? "Loading..." : `${filteredColleges.length} Colleges Found`}
+                            {loading ? "Loading..." : `${pagination?.total || 0} Colleges Found`}
                         </h2>
-                        <p className="text-xs text-gray-500">Based on your preferences</p>
+                        <p className="text-xs text-gray-500">
+                            Showing {colleges.length} of {pagination?.total || 0} colleges
+                        </p>
                     </div>
                 </div>
 
@@ -345,7 +556,7 @@ const FindCollege = () => {
                 ) : (
                     <>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {filteredColleges.map((college, index) => {
+                            {colleges.map((college, index) => {
                                 const isSaved = savedColleges.includes(college._id);
                                 return (
                                     <motion.div
@@ -369,10 +580,7 @@ const FindCollege = () => {
                                                         </div>
                                                     </div>
                                                     <div className="flex gap-1 flex-shrink-0">
-                                                        {/* Star button — synced with bookmark */}
-                                                        <span
-                                                            className="p-1.5 rounded-md transition-colors"
-                                                        >
+                                                        <span className="p-1.5 rounded-md transition-colors">
                                                             <FaStar
                                                                 className={`h-5 w-5 transition-colors ${isSaved
                                                                     ? "text-yellow-400 fill-yellow-400"
@@ -446,7 +654,6 @@ const FindCollege = () => {
                                                         View Details
                                                         <ExternalLink className="h-3 w-3 ml-1.5" />
                                                     </Button>
-                                                    {/* Bookmark button — synced with star */}
                                                     <button
                                                         onClick={() => toggleSave(college._id)}
                                                         className={`h-8 w-8 flex items-center justify-center rounded-md border transition-colors ${isSaved
@@ -540,7 +747,7 @@ const FindCollege = () => {
                             </div>
                         )}
 
-                        {filteredColleges.length === 0 && (
+                        {colleges.length === 0 && !loading && (
                             <div className="text-center py-12">
                                 <Building2 className="h-12 w-12 text-gray-300 mx-auto mb-3" />
                                 <h3 className="text-sm font-medium text-gray-900 mb-1">No colleges found</h3>
