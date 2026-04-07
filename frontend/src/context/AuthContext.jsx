@@ -180,7 +180,7 @@ export const AuthProvider = ({ children }) => {
 
 
 
-    // LOGOUT (CURRENT DEVICE)
+    // LOGOUT 
     const logout = async () => {
         try {
             const res = await axiosInstance.post("/auth/logout");

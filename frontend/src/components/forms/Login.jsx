@@ -14,6 +14,7 @@ import {
     EyeOff,
     Shield
 } from "lucide-react";
+import { isMobile, isTablet, isBrowser, osName, browserName } from "react-device-detect";
 
 export default function Login() {
     const [email, setEmail] = useState("");
@@ -24,6 +25,14 @@ export default function Login() {
 
     const { login } = useAuth();
     const navigate = useNavigate();
+
+    // Function to determine device type string
+    const getDeviceInfo = () => {
+        if (isMobile) return `mobile_${osName || 'unknown'}`;
+        if (isTablet) return `tablet_${osName || 'unknown'}`;
+        if (isBrowser) return `desktop_${browserName || 'unknown'}`;
+        return "web";
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -36,7 +45,8 @@ export default function Login() {
 
         setLoading(true);
         try {
-            await login(email, password, "web");
+            const deviceInfo = getDeviceInfo();
+            await login(email, password, deviceInfo);
             navigate("/dashboard");
         } catch (err) {
             setError(err.message || "Invalid credentials");
