@@ -10,18 +10,16 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card, CardContent } from "@/components/ui/card";
 import {
     X,
-    Plus,
     GraduationCap,
     BookOpen,
     ChevronRight,
     AlertCircle,
-    CheckCircle2,
     ArrowLeft,
     Sparkles,
     Search
 } from "lucide-react";
-import { useTest } from "../../context/TestContext";
-import TestLoader from "../../components/test/testLoader/TestLoader";
+import { useTest } from "../../../context/TestContext";
+import TestLoader from "../../../components/test/testLoader/TestLoader";
 
 const classOptions = [
     { value: "10", label: "Class 10", icon: <BookOpen className="w-4 h-4" /> },

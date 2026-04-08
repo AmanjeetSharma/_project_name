@@ -36,10 +36,10 @@ const Sessions = lazy(() => import("../pages/user/Sessions"));
 
 // test routes
 const TakeTest = lazy(() => import("../components/test/TakeTest"));
-const AllTests = lazy(() => import("../pages/user/AllTests"));
-const TestResult = lazy(() => import("../pages/user/TestResult"));
-const Preferences = lazy(() => import("../pages/user/Preferences"));
-const Suggestion = lazy(() => import("../pages/user/Suggestion"));
+const AllTests = lazy(() => import("../pages/user/assignment/AllTests"));
+const TestResult = lazy(() => import("../pages/user/assignment/TestResult"));
+const Preferences = lazy(() => import("../pages/user/assignment/Preferences"));
+const Suggestion = lazy(() => import("../pages/user/suggestion/Suggestion"));
 
 // College
 const FindCollege = lazy(() => import("../pages/college/FindCollege"));

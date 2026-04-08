@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { useCollege } from "../../context/CollegeContext";
+import { useCollege } from "../../../context/CollegeContext";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
     Select,
@@ -30,6 +30,7 @@ import {
     LayoutDashboard
 } from "lucide-react";
 import { shadcnToast } from "@/components/shadcnToast/ToastConfig";
+import SuggestionLoader from "./suggestionLoader/SuggestionLoader";
 
 const Suggestion = () => {
     const { testId } = useParams();
@@ -184,10 +185,13 @@ const Suggestion = () => {
                                     <p className="text-sm font-medium">Select a state to see matching colleges</p>
                                 </motion.div>
                             ) : loading ? (
-                                <div className="space-y-4">
-                                    {[1, 2, 3, 4].map(i => (
-                                        <div key={i} className="h-32 w-full bg-zinc-200 animate-pulse rounded-2xl" />
-                                    ))}
+                                // <div className="space-y-4">
+                                //     {[1, 2, 3, 4].map(i => (
+                                //         <div key={i} className="h-32 w-full bg-zinc-200 animate-pulse rounded-2xl" />
+                                //     ))}
+                                // </div>
+                                <div className="flex items-center justify-center h-48">
+                                    <SuggestionLoader />
                                 </div>
                             ) : (
                                 <motion.div

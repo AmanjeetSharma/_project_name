@@ -280,6 +280,7 @@ const getCollegeSuggestion = asyncHandler(async (req, res) => {
     // Calling trained-model (external API)
     let response;
     try {
+        await new Promise((resolve) => setTimeout(resolve, 3000));
         response = await axios.post(
             "https://one-stop-personalized-career-education-h92r.onrender.com/recommend",
             payload

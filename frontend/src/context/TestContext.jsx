@@ -7,7 +7,15 @@ const TestContext = createContext(null);
 export const TestProvider = ({ children }) => {
     const [loading, setLoading] = useState(false);
 
-    // 🔥 GENERATE TEST
+
+
+
+
+
+
+
+
+
     const generateTest = async ({ studentClass, interest }) => {
         setLoading(true);
 
@@ -41,7 +49,16 @@ export const TestProvider = ({ children }) => {
         }
     };
 
-    // 🔥 GET RUNNING TEST
+
+
+
+
+
+
+
+
+
+
     const getRunningTest = async () => {
         setLoading(true);
 
@@ -64,7 +81,16 @@ export const TestProvider = ({ children }) => {
         }
     };
 
-    // 🔥 SUBMIT TEST
+
+
+
+
+
+
+
+
+
+
     const submitTest = async ({ testId, answers }) => {
         setLoading(true);
 
@@ -98,7 +124,14 @@ export const TestProvider = ({ children }) => {
         }
     };
 
-    // 🔥 GET ALL TESTS (HISTORY)
+
+
+
+
+
+
+
+
     const getUserAllTests = async () => {
         setLoading(true);
 
@@ -121,7 +154,14 @@ export const TestProvider = ({ children }) => {
         }
     };
 
-    // 🔥 GET TEST BY ID (RESULT VIEW)
+
+
+
+
+
+
+
+
     const getTestById = async (testId) => {
         setLoading(true);
 
