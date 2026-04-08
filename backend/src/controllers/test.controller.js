@@ -204,7 +204,7 @@ const getRunningTest = asyncHandler(async (req, res) => {
   const test = await Test.findOne({
     userId,
     status: "in-progress"
-  }).sort({ createdAt: -1 }); // latest one
+  }).sort({ createdAt: -1 });
 
   if (!test) {
     return res
@@ -212,11 +212,45 @@ const getRunningTest = asyncHandler(async (req, res) => {
       .json(new ApiResponse(200, null, "No running test found"));
   }
 
-  console.log("On-going test fetched for user:", userId, "Test ID:", test._id);
+  const now = Date.now();
+  const startedAt = new Date(test.startedAt).getTime();
 
-  return res
-    .status(200)
-    .json(new ApiResponse(200, test, "Running test fetched successfully"));
+  const elapsed = Math.floor((now - startedAt) / 1000); // seconds
+  const remainingTime = test.totalTime - elapsed;
+
+  console.log("On-going test fetched:", test._id, "Remaining:", remainingTime);
+
+  // time over
+  if (remainingTime <= 0) {
+    test.status = "submitted";
+    test.submittedAt = new Date();
+
+    await test.save();
+
+    // auto-submit on expiry or left abandoned
+    return res.status(200).json(
+      new ApiResponse(
+        200,
+        {
+          expired: true,
+          testId: test._id
+        },
+        "Test time expired"
+      )
+    );
+  }
+
+  // complete test object with remaining time
+  return res.status(200).json(
+    new ApiResponse(
+      200,
+      {
+        ...test.toObject(),
+        remainingTime // current remaining time in seconds
+      },
+      "Running test fetched successfully"
+    )
+  );
 });
 
 

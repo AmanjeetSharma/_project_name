@@ -51,7 +51,7 @@ const TestTimer = ({ initialTime = 3600, onTimeUp, isActive = true }) => {
 
     return (
         <div className="flex flex-col items-end gap-2">
-            <div className="flex items-center gap-2 bg-zinc-50 border border-zinc-200 px-3 py-1.5 rounded-full">
+            <div className="flex items-center gap-2 bg-zinc-50 border border-zinc-200 px-4 py-2.5 rounded-full">
                 <Clock className={`h-4 w-4 ${timeLeft <= 60 ? 'text-red-500' : 'text-zinc-400'}`} />
                 <span className={`font-mono text-sm ${getColor()}`}>
                     {formatTime(timeLeft)}

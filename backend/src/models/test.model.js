@@ -47,8 +47,9 @@ const testSchema = new Schema(
       type: Date,
       default: Date.now
     },
-    timeRemaining: {
-      type: Number, 
+    totalTime: {
+      type: Number,
+      default: 3600
     }
   },
   { timestamps: true }

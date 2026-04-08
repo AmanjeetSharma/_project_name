@@ -41,20 +41,41 @@ const TakeTest = () => {
     const [submitted, setSubmitted] = useState(false);
     const [loadingTest, setLoadingTest] = useState(true);
     const [sectionOpen, setSectionOpen] = useState(false);
+    const [initialTime, setInitialTime] = useState(3600); // Default 1 hour
 
     useEffect(() => {
         const load = async () => {
             try {
-                const t = await getRunningTest();
+                const response = await getRunningTest();
+
+                // Check if test expired
+                if (response.expired) {
+                    shadcnToast.error("Test time expired! Redirecting...");
+                    navigate(`/test-result/${response.testId}`);
+                    return;
+                }
+
+                const t = response;
                 if (!t || t.status !== "in-progress") {
                     shadcnToast.error("No active test found");
                     navigate("/dashboard");
                     return;
                 }
+
                 setTest(t);
                 initializeAnswers(t);
                 enterFullScreen();
+
+                // Set initial time from remainingTime or calculate from totalTime
+                if (t.remainingTime !== undefined) {
+                    setInitialTime(t.remainingTime);
+                } else if (t.totalTime) {
+                    const elapsed = (Date.now() - new Date(t.startedAt).getTime()) / 1000;
+                    const remaining = Math.max(0, t.totalTime - elapsed);
+                    setInitialTime(remaining);
+                }
             } catch (err) {
+                console.error(err);
                 navigate("/dashboard");
             } finally {
                 setLoadingTest(false);
@@ -112,12 +133,19 @@ const TakeTest = () => {
             navigate(`/test-result/${test._id}`);
         } catch (err) {
             setSubmitted(false);
+            shadcnToast.error("Failed to submit test. Please try again.");
         }
+    };
+
+    const handleTimeUp = async () => {
+        if (submitted) return;
+        shadcnToast.warning("Time's up! Auto-submitting your test...");
+        await handleSubmit();
     };
 
     if (loadingTest) return (
         <div className="min-h-screen flex items-center justify-center">
-            <PageLoader />
+            {/* <PageLoader /> */}
         </div>
     );
 
@@ -162,10 +190,11 @@ const TakeTest = () => {
                     </div>
 
                     <div className="flex items-center gap-3">
-                        <div className="flex items-center gap-2 px-4 py-1.5 bg-zinc-100 rounded-full border border-zinc-200">
-                            <Clock className="h-3.5 w-3.5 text-zinc-500" />
-                            <TestTimer onTimeUp={() => handleSubmit(true)} />
-                        </div>
+                        <TestTimer
+                            initialTime={initialTime}
+                            onTimeUp={handleTimeUp}
+                            isActive={!submitted}
+                        />
                         <Button
                             variant="ghost"
                             size="icon"
@@ -203,7 +232,6 @@ const TakeTest = () => {
                         </div>
 
                         <Card className="border-none shadow-2xl bg-zinc-900 text-white overflow-hidden rounded-[2rem] relative group">
-                            {/* Subtle Accent Glow */}
                             <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
 
                             <CardContent className="p-8 flex flex-col items-center justify-center text-center space-y-4 relative z-10">
@@ -234,9 +262,9 @@ const TakeTest = () => {
                             exit={{ opacity: 0, x: -20 }}
                             transition={{ duration: 0.25, ease: "easeOut" }}
                         >
-                            <div className="flex items-center justify-between mb-4 px-1"> {/* Reduced mb from 6 to 4 */}
+                            <div className="flex items-center justify-between mb-4 px-1">
                                 <div>
-                                    <h2 className="text-xl font-black tracking-tight text-zinc-900">{currentSectionData.sectionName}</h2> {/* Reduced text size */}
+                                    <h2 className="text-xl font-black tracking-tight text-zinc-900">{currentSectionData.sectionName}</h2>
                                     <p className="text-[12px] text-zinc-400">Select the appropriate answer below.</p>
                                 </div>
                                 <div className="hidden sm:block">
@@ -246,20 +274,20 @@ const TakeTest = () => {
                                 </div>
                             </div>
 
-                            <div className="space-y-3"> {/* Reduced space-y from 4 to 3 */}
+                            <div className="space-y-3">
                                 {currentSectionData.questions.map((q, qIdx) => (
                                     <Card key={qIdx} className="border-zinc-200 shadow-none hover:border-zinc-300 transition-all rounded-xl overflow-hidden">
-                                        <CardHeader className="bg-zinc-50/50 py-3 px-4 border-b border-zinc-100"> {/* Reduced py and px */}
-                                            <div className="flex gap-3"> {/* Reduced gap from 4 to 3 */}
+                                        <CardHeader className="bg-zinc-50/50 py-3 px-4 border-b border-zinc-100">
+                                            <div className="flex gap-3">
                                                 <span className="flex-shrink-0 flex items-center justify-center h-6 w-6 rounded-full bg-zinc-900 text-white text-[10px] font-bold italic">
                                                     {qIdx + 1}
                                                 </span>
-                                                <p className="font-bold text-zinc-800 text-sm leading-snug pt-0.5"> {/* Reduced text size */}
+                                                <p className="font-bold text-zinc-800 text-sm leading-snug pt-0.5">
                                                     {q.question}
                                                 </p>
                                             </div>
                                         </CardHeader>
-                                        <CardContent className="p-3 px-4"> {/* Reduced p from 6 to 3 */}
+                                        <CardContent className="p-3 px-4">
                                             <RadioGroup
                                                 value={answers[currentSection]?.[qIdx] || ""}
                                                 onValueChange={(val) => handleAnswerChange(currentSection, qIdx, val)}
