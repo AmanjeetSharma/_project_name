@@ -1,7 +1,10 @@
 import { College } from "../models/college.model.js";
+import { Result } from "../models/result.model.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import axios from "axios";
+
 
 
 
@@ -246,6 +249,65 @@ const deleteCollege = asyncHandler(async (req, res) => {
 
 
 
+const getCollegeSuggestion = asyncHandler(async (req, res) => {
+    const { testId, state } = req.body;
+
+    if (!testId || !state) {
+        throw new ApiError(400, "testId and state are required");
+    }
+
+    // 🔥 Get result from DB
+    const result = await Result.findOne({ testId });
+
+    if (!result) {
+        throw new ApiError(404, "Test result not found");
+    }
+
+    const scores = result.scores;
+
+    // 🔥 Prepare payload for external API
+    const payload = {
+        quantitative_score: scores.quantitative || 0,
+        logical_score: scores.logical || 0,
+        verbal_score: scores.verbal || 0,
+        creative_score: scores.creative || 0,
+        technical_score: scores.technical || 0,
+        aggregate_percentage: scores.aggregate || 0,
+
+        state,
+        prefers_government_college: true,
+        top_n: 5 // top N suggestions
+    };
+
+    // 🔥 Call external API
+    let response;
+    try {
+        response = await axios.post(
+            "https://one-stop-personalized-career-education-h92r.onrender.com/recommend",
+            payload
+        );
+    } catch (err) {
+        console.error("College API error:", err.message);
+        throw new ApiError(500, "Failed to fetch college recommendations or render is cold starting");
+    }
+
+    console.log("Number of college recommendations:", response.data.recommendations.length);
+
+    return res.status(200).json(
+        new ApiResponse(
+            200,
+            response.data,
+            "College recommendations fetched successfully"
+        )
+    );
+});
+
+
+
+
+
+
+
 
 export {
     getColleges,
@@ -254,4 +316,5 @@ export {
     updateCollege,
     deleteCollege,
     getFilters,
+    getCollegeSuggestion
 }

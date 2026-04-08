@@ -8,6 +8,7 @@ import { AuthProvider } from "./context/AuthContext";
 import { UserProvider } from "./context/UserContext";
 import { PasswordProvider } from "./context/PasswordContext";
 import { CollegeProvider } from "./context/CollegeContext";
+import { TestProvider } from "./context/TestContext";
 import "./App.css";
 
 function App() {
@@ -18,6 +19,7 @@ function App() {
                 <UserProvider>
                     <PasswordProvider>
                         <CollegeProvider>
+                            <TestProvider>
 
                             <div className="min-h-screen bg-gray-50">
                                 <Navbar />
@@ -36,6 +38,7 @@ function App() {
                                     }}
                                 />
                             </div>
+                            </TestProvider>
                         </CollegeProvider>
                     </PasswordProvider>
                 </UserProvider>

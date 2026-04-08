@@ -1,30 +1,42 @@
-import { useEffect, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 
-const useFullscreen = (enabled) => {
-  const ref = useRef();
+const useFullScreen = () => {
+    const [isFullScreen, setIsFullScreen] = useState(false);
 
-  useEffect(() => {
-    if (enabled && ref.current) {
-      if (ref.current.requestFullscreen) {
-        ref.current.requestFullscreen();
-      } else if (ref.current.webkitRequestFullscreen) {
-        ref.current.webkitRequestFullscreen();
-      } else if (ref.current.mozRequestFullScreen) {
-        ref.current.mozRequestFullScreen();
-      } else if (ref.current.msRequestFullscreen) {
-        ref.current.msRequestFullscreen();
-      }
-    } else if (!enabled && document.fullscreenElement) {
-      document.exitFullscreen();
-    }
-    return () => {
-      if (document.fullscreenElement) {
-        document.exitFullscreen();
-      }
-    };
-  }, [enabled]);
+    const enterFullScreen = useCallback(async () => {
+        try {
+            const elem = document.documentElement;
+            if (elem.requestFullscreen) {
+                await elem.requestFullscreen();
+            }
+        } catch (err) {
+            console.warn("Fullscreen not allowed:", err);
+        }
+    }, []);
 
-  return ref;
+    const exitFullScreen = useCallback(async () => {
+        try {
+            if (document.exitFullscreen) {
+                await document.exitFullscreen();
+            }
+        } catch (err) {
+            console.warn("Exit fullscreen failed:", err);
+        }
+    }, []);
+
+    useEffect(() => {
+        const handleChange = () => {
+            setIsFullScreen(!!document.fullscreenElement);
+        };
+
+        document.addEventListener("fullscreenchange", handleChange);
+
+        return () => {
+            document.removeEventListener("fullscreenchange", handleChange);
+        };
+    }, []);
+
+    return { isFullScreen, enterFullScreen, exitFullScreen };
 };
 
-export default useFullscreen;
+export default useFullScreen;

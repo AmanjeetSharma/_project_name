@@ -251,6 +251,39 @@ export const CollegeProvider = ({ children }) => {
 
 
 
+    const getCollegeSuggestion = async ({ testId, state }) => {
+        setLoading(true);
+
+        try {
+            const { data } = await axiosInstance.post("/colleges/college-suggestion", {
+                testId,
+                state
+            });
+
+            return data?.data; // array of colleges
+        } catch (err) {
+            const msg =
+                err?.response?.data?.message || "Failed to fetch college suggestions";
+
+            schadenToast.error(msg, {
+                duration: 4000,
+                position: "top-center",
+            });
+
+            throw err;
+        } finally {
+            setLoading(false);
+        }
+    };
+
+
+
+
+
+
+
+
+
     const value = {
         loading,
         colleges,
@@ -264,6 +297,7 @@ export const CollegeProvider = ({ children }) => {
         updateCollege,
         deleteCollege,
         getFilters,
+        getCollegeSuggestion
     };
 
     return (
