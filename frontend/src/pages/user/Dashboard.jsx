@@ -120,13 +120,13 @@ const Dashboard = () => {
             <Button
               variant="outline"
               onClick={() => navigate("/profile")}
-              className="rounded-full px-6 border-zinc-200 hover:bg-white transition-all text-xs font-bold uppercase tracking-wider"
+              className="rounded-full px-6 border-zinc-200 hover:bg-zinc-100 hover:border-black/30 transition-all text-xs font-bold uppercase tracking-wider cursor-pointer"
             >
               <User className="w-3 h-3 mr-2" /> Profile
             </Button>
             <Button
               onClick={() => navigate(hasRunningTest ? "/take-test" : "/preferences")}
-              className="rounded-full bg-zinc-900 text-white px-8 shadow-xl shadow-zinc-200 hover:bg-zinc-800 transition-all text-xs font-bold uppercase tracking-wider"
+              className="rounded-full bg-black text-white px-8 shadow-xl shadow-zinc-200 hover:bg-zinc-700 transition-all text-xs font-bold uppercase tracking-wider cursor-pointer"
             >
               {hasRunningTest ? "Continue Test" : "Take New Test"}
             </Button>
@@ -164,7 +164,7 @@ const Dashboard = () => {
                     variant="ghost"
                     size="sm"
                     onClick={() => navigate("/all-tests")}
-                    className="text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:text-zinc-900 hover:bg-zinc-50 transition-all gap-2 px-4 rounded-full"
+                    className="text-[10px] font-black uppercase tracking-widest text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100 transition-all gap-2 px-4 rounded-full cursor-pointer"
                   >
                     View All <ArrowRight className="h-3 w-3" />
                   </Button>
@@ -175,7 +175,7 @@ const Dashboard = () => {
                 {recentTests.length === 0 ? (
                   <div className="p-20 text-center text-zinc-400 font-medium">No activity recorded yet.</div>
                 ) : (
-                  <div className="divide-y divide-zinc-50">
+                  <div className="divide-y divide-zinc-200">
                     {recentTests.map((test, idx) => {
                       const score = test.scores?.aggregate || 0;
                       const cfg = scoreConfig(score);
