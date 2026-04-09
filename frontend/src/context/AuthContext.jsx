@@ -156,7 +156,6 @@ export const AuthProvider = ({ children }) => {
             shadcnToast.success(data?.message || "Welcome back!", {
                 duration: 3000,
                 position: "top-center",
-                description: `Logged in as ${userData.name || email}`,
             });
 
             return userData;

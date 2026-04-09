@@ -232,7 +232,7 @@ const login = asyncHandler(async (req, res) => {
             new ApiResponse(
                 200,
                 { user: loggedInUser },
-                "Login successful"
+                `Welcome back, ${loggedInUser.name || loggedInUser.email.split('@')[0]}!`
             )
         );
 });
@@ -322,7 +322,7 @@ const logoutAll = asyncHandler(async (req, res) => {
             String(session.refreshToken) !== String(currentToken) &&
             session.isActive
     );
-    
+
     if (otherActiveSessions.length === 0) {
         throw new ApiError(400, "No other active sessions found");
     }

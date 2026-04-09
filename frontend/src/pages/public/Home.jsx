@@ -481,7 +481,7 @@ const CTABanner = () => {
                 <button className="group relative overflow-hidden inline-flex items-center justify-center gap-2.5 px-6 sm:px-8 py-3 sm:py-4 rounded-xl text-xs sm:text-sm font-bold text-gray-950 transition-all duration-300 active:scale-95 home-body w-full sm:w-auto"
                   style={{ background: "linear-gradient(135deg, #f59e0b, #f97316)", boxShadow: "0 6px 28px rgba(245,158,11,0.35)" }}>
                   <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-600 bg-gradient-to-r from-transparent via-white/25 to-transparent skew-x-12" />
-                  Take the Free Aptitude Test
+                  Take your first Comprehensive test
                   <Zap className="h-3.5 w-3.5 sm:h-4 sm:w-4 group-hover:rotate-12 transition-transform" />
                 </button>
               </Link>

@@ -33,8 +33,8 @@ const generateTest = asyncHandler(async (req, res) => {
   }
 
 
-  // await new Promise(r => setTimeout(r, 10000));
-  // return;// temporary to avoid hitting gemini limits during development
+  await new Promise(r => setTimeout(r, 10000));
+  return;// temporary to avoid hitting gemini limits during development
 
   // generating test using gemini
   const aiResponse = await generateFinanceQuery({ studentClass, interest });

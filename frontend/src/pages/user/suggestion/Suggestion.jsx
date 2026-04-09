@@ -185,14 +185,14 @@ const Suggestion = () => {
                                     <p className="text-sm font-medium">Select a state to see matching colleges</p>
                                 </motion.div>
                             ) : loading ? (
-                                // <div className="space-y-4">
-                                //     {[1, 2, 3, 4].map(i => (
-                                //         <div key={i} className="h-32 w-full bg-zinc-200 animate-pulse rounded-2xl" />
-                                //     ))}
-                                // </div>
-                                <div className="flex items-center justify-center h-48">
-                                    <SuggestionLoader />
+                                <div className="space-y-4">
+                                    {[1, 2, 3, 4].map(i => (
+                                        <div key={i} className="h-32 w-full bg-zinc-200 animate-pulse rounded-2xl" />
+                                    ))}
                                 </div>
+                                // <div className="flex items-center justify-center h-48">
+                                //     <SuggestionLoader />
+                                // </div>
                             ) : (
                                 <motion.div
                                     initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
