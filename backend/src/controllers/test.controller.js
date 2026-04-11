@@ -1,5 +1,5 @@
 import { Test } from "../models/test.model.js";
-import { generateFinanceQuery } from "../service/gemini.service.js";
+import { geminiService } from "../service/gemini.service.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
@@ -36,7 +36,8 @@ const generateTest = asyncHandler(async (req, res) => {
   // return;// temporary to avoid hitting gemini limits during development
 
   // generating test using gemini
-  const aiResponse = await generateFinanceQuery({ studentClass, interest });
+  console.log("Generating test for user:", req.user._id, "Class:", studentClass, "Interest:", interest);// debug log to track test generation requests
+  const aiResponse = await geminiService({ studentClass, interest });
 
   if (!aiResponse?.sections || aiResponse.sections.length === 0) {
     throw new ApiError(500, "Failed to generate test from AI");
