@@ -8,9 +8,23 @@
 ![MongoDB](https://img.shields.io/badge/Database-MongoDB-47A248?style=for-the-badge&logo=mongodb&logoColor=white)
 ![Gemini](https://img.shields.io/badge/AI-Gemini-4285F4?style=for-the-badge&logo=google&logoColor=white)
 
+---
+
+## URLs
+
+| Service | URL |
+| :--- | :--- |
+| Frontend | [https://college-finder-advisor.vercel.app](https://college-finder-advisor.vercel.app) |
+| Backend Server | [https://college-finder-advisor.onrender.com](https://college-finder-advisor.onrender.com) |
+| Model | [https://one-stop-personalized-career-education-h92r.onrender.com/recommend](https://one-stop-personalized-career-education-h92r.onrender.com/recommend) |
+
+---
+
 ## Overview
 
-`CollegeFinder` is a full-stack platform built to help students make better education and career decisions with less confusion. It combines:
+`CollegeFinder` is a smart web platform that helps students find suitable colleges based on their academic background, interests, and preferences. It simplifies the complex process of college selection. The system provides personalized recommendations using structured data and logic. Overall, it helps students make informed and confident career decisions.
+
+It combines:
 
 - verified user onboarding
 - aptitude-style AI-generated tests
@@ -21,12 +35,14 @@
 
 The app is especially geared toward students in Class 10 and Class 12 who want structured guidance on streams, colleges, and next steps.
 
+---
+
 ## What It Does
 
 ### Student Experience
 
 - Register, verify email, and sign in securely
-- Take AI-generated aptitude or interest-based tests
+- Take aptitude-style AI-generated tests
 - View submitted test results and score breakdowns
 - Explore suggested colleges based on performance and state preference
 - Browse college listings with search, pagination, and filters
@@ -41,26 +57,34 @@ The app is especially geared toward students in Class 10 and Class 12 who want s
 - Gemini-powered test generation
 - External recommendation-model integration for college suggestions
 
+---
+
 ## Tech Stack
 
 ### Frontend
 
-- React 19
-- Vite
-- React Router
-- Tailwind CSS
-- shadcn UI
-- Axios
-- Framer Motion
+| Technology | Purpose |
+| :--- | :--- |
+| React 19 | UI Library |
+| Vite | Build Tool |
+| React Router | Routing |
+| Tailwind CSS | Styling |
+| shadcn UI | Component Library |
+| Axios | HTTP Client |
+| Framer Motion | Animations |
 
 ### Backend
 
-- Node.js
-- Express 5
-- MongoDB with Mongoose
-- JWT authentication
-- Nodemailer / Brevo email integration
-- Google Generative AI SDK
+| Technology | Purpose |
+| :--- | :--- |
+| Node.js | Runtime Environment |
+| Express 5 | Web Framework |
+| MongoDB + Mongoose | Database & ODM |
+| JWT | Authentication |
+| Nodemailer / Brevo | Email Integration |
+| Google Generative AI SDK | AI Test Generation |
+
+---
 
 ## Monorepo Structure
 
@@ -69,7 +93,6 @@ CollegeFinder/
 |- backend/    # Express API, MongoDB models, auth, test engine, college APIs
 |- frontend/   # React app, routes, pages, contexts, UI components
 `- README.md
-```
 
 ## Key Modules
 
