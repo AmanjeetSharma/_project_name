@@ -226,3 +226,10 @@ GET /api/v1/health-check
 - Auth uses cookies with `withCredentials: true` on the frontend.
 - The recommendation service is an external model endpoint and may take time to warm up if hosted on Render.
 - No proper automated test suite is configured yet in the current repo.
+
+
+## 📄 License
+
+This project is licensed under the MIT License.
+
+Copyright (c) 2026 Amanjeet Sharma
