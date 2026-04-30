@@ -22,7 +22,7 @@ const changePassword = asyncHandler(async (req, res) => {
     const userId = req.user?._id;
 
     if (!userId) {
-        throw new ApiError(401, "Please log in to change your password");
+        throw new ApiError(401, "Unauthorized");
     }
 
     const { currentPassword, newPassword, confirmNewPassword } = req.body;
@@ -131,7 +131,7 @@ const forgotPassword = asyncHandler(async (req, res) => {
     const emailHTML = resetPasswordEmail(resetLink);
 
     if (process.env.EMAIL_ENABLED === 'true') { // Only send email if enabled in environment variables
-        await sendEmail(user.email, "Reset Your Password - CollegeFinder", emailHTML, true);
+        await sendEmail(user.email, "Reset Your Password - MySaaS", emailHTML, true);
     }
     console.log(`[sendEmail] for password reset: ${process.env.EMAIL_ENABLED === 'true' ? 'Email sent' : 'Email sending disabled, skipping...'}`);
 

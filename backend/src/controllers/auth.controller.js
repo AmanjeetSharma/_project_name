@@ -28,19 +28,15 @@ const register = asyncHandler(async (req, res) => {
         throw new ApiError(400, "All fields are required");
     }
 
-    // 1. Check existing user
     const existingUser = await User.findOne({ email });
     if (existingUser) {
         throw new ApiError(400, "User already exists");
     }
 
-    // 2. Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // 3. Generate token
     const token = crypto.randomBytes(32).toString("hex");
 
-    // 4. Check pending user
     const existingPending = await PendingUser.findOne({ email });
 
     if (existingPending) {
