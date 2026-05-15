@@ -50,6 +50,7 @@ const generateTest = asyncHandler(async (req, res) => {
       options: q.options,
       correctAnswer: q.answer,
       userAnswer: null,
+      markedForReview: false,
       isCorrect: false
     }))
   }));
@@ -94,6 +95,10 @@ const submitTest = asyncHandler(async (req, res) => {
 
   if (!test) {
     throw new ApiError(404, "Test not found");
+  }
+
+  if (test.userId.toString() !== req.user._id.toString()) {
+    throw new ApiError(403, "Unauthorized access");
   }
 
   // to prevent cheating, only allow submission if test is in-progress
@@ -190,6 +195,70 @@ const submitTest = asyncHandler(async (req, res) => {
 
 
 
+
+
+
+
+
+
+
+
+const saveTestProgress = asyncHandler(async (req, res) => {
+  const { testId, sectionIndex, questionIndex, userAnswer, markedForReview } = req.body;
+
+  if (!testId || !Number.isInteger(sectionIndex) || !Number.isInteger(questionIndex)) {
+    throw new ApiError(400, "testId, sectionIndex and questionIndex are required");
+  }
+
+  const test = await Test.findById(testId);
+
+  if (!test) {
+    throw new ApiError(404, "Test not found");
+  }
+
+  if (test.userId.toString() !== req.user._id.toString()) {
+    throw new ApiError(403, "Unauthorized access");
+  }
+
+  if (test.status !== "in-progress") {
+    throw new ApiError(400, "Test is not in progress");
+  }
+
+  const question = test.sections?.[sectionIndex]?.questions?.[questionIndex];
+
+  if (!question) {
+    throw new ApiError(404, "Question not found");
+  }
+
+  if (userAnswer && !question.options.includes(userAnswer)) {
+    throw new ApiError(400, "Selected answer is not valid for this question");
+  }
+
+  if (userAnswer !== undefined) {
+    question.userAnswer = userAnswer || null;
+  }
+
+  if (markedForReview !== undefined) {
+    question.markedForReview = Boolean(markedForReview);
+  }
+
+  await test.save();
+
+  console.log("Test progress saved for Test ID:", test._id, "Section:", sectionIndex+1, "Question:", questionIndex+1); 
+
+  return res.status(200).json(
+    new ApiResponse(
+      200,
+      {
+        sectionIndex,
+        questionIndex,
+        userAnswer: question.userAnswer,
+        markedForReview: question.markedForReview
+      },
+      "Test progress saved successfully"
+    )
+  );
+});
 
 
 
@@ -346,6 +415,7 @@ const getUserAllTests = asyncHandler(async (req, res) => {
 
 export {
   generateTest,
+  saveTestProgress,
   submitTest,
   getRunningTest,
   getTestById,

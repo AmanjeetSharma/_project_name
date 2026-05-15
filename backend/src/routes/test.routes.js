@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { verifyToken } from "../middlewares/auth.middleware.js";
-import { generateTest, getRunningTest, submitTest, getUserAllTests, getTestById } from "../controllers/test.controller.js";
+import { generateTest, getRunningTest, saveTestProgress, submitTest, getUserAllTests, getTestById } from "../controllers/test.controller.js";
 
 const router = Router();
 
@@ -12,6 +12,9 @@ router.get("/", verifyToken, getRunningTest);
 
 // POST /api/test/submit
 router.post("/submit", verifyToken, submitTest);
+
+// PATCH /api/test/progress - save one in-progress answer/review marker
+router.patch("/progress", verifyToken, saveTestProgress);
 
 // GET /api/test/history - get all tests taken by the user
 router.get("/history", verifyToken, getUserAllTests);

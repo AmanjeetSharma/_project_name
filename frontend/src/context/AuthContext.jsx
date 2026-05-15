@@ -87,7 +87,7 @@ export const AuthProvider = ({ children }) => {
             shadcnToast.error(msg, {
                 duration: 4000,
                 position: "top-center",
-                description: "Please try again",
+                description: "please check your details and try again",
             });
             throw err;
         }

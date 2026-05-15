@@ -132,6 +132,25 @@ export const TestProvider = ({ children }) => {
 
 
 
+    const saveTestProgress = async ({ testId, sectionIndex, questionIndex, userAnswer, markedForReview }) => {
+        const { data } = await axiosInstance.patch("/test/progress", {
+            testId,
+            sectionIndex,
+            questionIndex,
+            userAnswer,
+            markedForReview,
+        });
+
+        return data?.data;
+    };
+
+
+
+
+
+
+
+
     const getUserAllTests = async () => {
         setLoading(true);
 
@@ -193,6 +212,7 @@ export const TestProvider = ({ children }) => {
         generateTest,
         getRunningTest,
         submitTest,
+        saveTestProgress,
         getUserAllTests,
         getTestById,
     };

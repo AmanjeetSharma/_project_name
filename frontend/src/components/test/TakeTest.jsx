@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTest } from "../../context/TestContext";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion as Motion, AnimatePresence } from "framer-motion";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -23,6 +23,8 @@ import {
     CheckCircle2,
     Circle,
     BookOpen,
+    Bookmark,
+    BookmarkCheck,
     Clock
 } from "lucide-react";
 
@@ -32,11 +34,12 @@ import { shadcnToast } from "@/components/shadcnToast/ToastConfig";
 
 const TakeTest = () => {
     const navigate = useNavigate();
-    const { submitTest, getRunningTest, loading } = useTest();
+    const { submitTest, getRunningTest, saveTestProgress, loading } = useTest();
     const { isFullScreen, enterFullScreen, exitFullScreen } = useFullScreen();
 
     const [test, setTest] = useState(null);
     const [answers, setAnswers] = useState({});
+    const [markedForReview, setMarkedForReview] = useState({});
     const [currentSection, setCurrentSection] = useState(0);
     const [submitted, setSubmitted] = useState(false);
     const [loadingTest, setLoadingTest] = useState(true);
@@ -101,20 +104,57 @@ const TakeTest = () => {
 
     const initializeAnswers = (t) => {
         const obj = {};
+        const reviewObj = {};
         t.sections.forEach((section, sIdx) => {
             obj[sIdx] = {};
+            reviewObj[sIdx] = {};
             section.questions.forEach((q, qIdx) => {
                 obj[sIdx][qIdx] = q.userAnswer || "";
+                reviewObj[sIdx][qIdx] = Boolean(q.markedForReview);
             });
         });
         setAnswers(obj);
+        setMarkedForReview(reviewObj);
+    };
+
+    const saveQuestionProgress = async (sIdx, qIdx, userAnswer, isMarked) => {
+        if (!test?._id) return;
+
+        try {
+            await saveTestProgress({
+                testId: test._id,
+                sectionIndex: sIdx,
+                questionIndex: qIdx,
+                userAnswer,
+                markedForReview: isMarked,
+            });
+        } catch (err) {
+            console.error(err);
+            shadcnToast.error("Could not save this question. Please try again.");
+        }
     };
 
     const handleAnswerChange = (sIdx, qIdx, value) => {
+        const isMarked = Boolean(markedForReview[sIdx]?.[qIdx]);
+
         setAnswers(prev => ({
             ...prev,
             [sIdx]: { ...prev[sIdx], [qIdx]: value }
         }));
+
+        saveQuestionProgress(sIdx, qIdx, value, isMarked);
+    };
+
+    const handleReviewToggle = (sIdx, qIdx) => {
+        const nextMarked = !markedForReview[sIdx]?.[qIdx];
+        const currentAnswer = answers[sIdx]?.[qIdx] || "";
+
+        setMarkedForReview(prev => ({
+            ...prev,
+            [sIdx]: { ...prev[sIdx], [qIdx]: nextMarked }
+        }));
+
+        saveQuestionProgress(sIdx, qIdx, currentAnswer, nextMarked);
     };
 
     const handleSubmit = async () => {
@@ -131,7 +171,7 @@ const TakeTest = () => {
             await submitTest({ testId: test._id, answers: formatted });
             exitFullScreen();
             navigate(`/test-result/${test._id}`);
-        } catch (err) {
+        } catch {
             setSubmitted(false);
             shadcnToast.error("Failed to submit test. Please try again.");
         }
@@ -153,6 +193,7 @@ const TakeTest = () => {
 
     const totalQuestions = test.sections.reduce((acc, s) => acc + s.questions.length, 0);
     const answeredCount = Object.values(answers).reduce((acc, sec) => acc + Object.values(sec).filter(v => v).length, 0);
+    const reviewCount = Object.values(markedForReview).reduce((acc, sec) => acc + Object.values(sec).filter(Boolean).length, 0);
     const progress = (answeredCount / totalQuestions) * 100;
     const currentSectionData = test.sections[currentSection];
 
@@ -177,6 +218,7 @@ const TakeTest = () => {
                                     <SectionNavList
                                         test={test}
                                         answers={answers}
+                                        markedForReview={markedForReview}
                                         current={currentSection}
                                         set={setCurrentSection}
                                         close={() => setSectionOpen(false)}
@@ -226,6 +268,7 @@ const TakeTest = () => {
                             <SectionNavList
                                 test={test}
                                 answers={answers}
+                                markedForReview={markedForReview}
                                 current={currentSection}
                                 set={setCurrentSection}
                             />
@@ -247,6 +290,10 @@ const TakeTest = () => {
                                     <BookOpen className="h-3 w-3 text-zinc-400" />
                                     <span>{answeredCount} <span className="text-zinc-500 mx-1">/</span> {totalQuestions} Solved</span>
                                 </div>
+                                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-400/10 border border-amber-300/20 text-[10px] font-bold text-amber-200 uppercase tracking-tight">
+                                    <Bookmark className="h-3 w-3" />
+                                    <span>{reviewCount} Marked</span>
+                                </div>
                             </CardContent>
                         </Card>
                     </div>
@@ -255,7 +302,7 @@ const TakeTest = () => {
                 {/* --- Question Content --- */}
                 <section className="lg:col-span-9 space-y-4 pb-20">
                     <AnimatePresence mode="wait">
-                        <motion.div
+                        <Motion.div
                             key={currentSection}
                             initial={{ opacity: 0, x: 20 }}
                             animate={{ opacity: 1, x: 0 }}
@@ -278,13 +325,32 @@ const TakeTest = () => {
                                 {currentSectionData.questions.map((q, qIdx) => (
                                     <Card key={qIdx} className="border-zinc-200 shadow-none hover:border-zinc-300 transition-all rounded-xl overflow-hidden">
                                         <CardHeader className="bg-zinc-50/50 py-3 px-4 border-b border-zinc-100">
-                                            <div className="flex gap-3">
-                                                <span className="flex-shrink-0 flex items-center justify-center h-6 w-6 rounded-full bg-zinc-900 text-white text-[10px] font-bold italic">
-                                                    {qIdx + 1}
-                                                </span>
-                                                <p className="font-bold text-zinc-800 text-sm leading-snug pt-0.5">
-                                                    {q.question}
-                                                </p>
+                                            <div className="flex items-start justify-between gap-3">
+                                                <div className="flex gap-3 min-w-0">
+                                                    <span className="flex-shrink-0 flex items-center justify-center h-6 w-6 rounded-full bg-zinc-900 text-white text-[10px] font-bold italic">
+                                                        {qIdx + 1}
+                                                    </span>
+                                                    <p className="font-bold text-zinc-800 text-sm leading-snug pt-0.5">
+                                                        {q.question}
+                                                    </p>
+                                                </div>
+                                                <Button
+                                                    type="button"
+                                                    variant={markedForReview[currentSection]?.[qIdx] ? "default" : "outline"}
+                                                    size="sm"
+                                                    onClick={() => handleReviewToggle(currentSection, qIdx)}
+                                                    className={`h-8 shrink-0 rounded-full px-3 text-[11px] font-bold ${markedForReview[currentSection]?.[qIdx]
+                                                        ? "bg-amber-500 text-white hover:bg-amber-600"
+                                                        : "border-amber-200 text-amber-700 hover:bg-amber-50"
+                                                        }`}
+                                                >
+                                                    {markedForReview[currentSection]?.[qIdx] ? (
+                                                        <BookmarkCheck className="h-3.5 w-3.5 mr-1.5" />
+                                                    ) : (
+                                                        <Bookmark className="h-3.5 w-3.5 mr-1.5" />
+                                                    )}
+                                                    Review
+                                                </Button>
                                             </div>
                                         </CardHeader>
                                         <CardContent className="p-3 px-4">
@@ -323,7 +389,7 @@ const TakeTest = () => {
                                     </Card>
                                 ))}
                             </div>
-                        </motion.div>
+                        </Motion.div>
                     </AnimatePresence>
 
                     {/* Bottom Navigation */}
@@ -369,10 +435,11 @@ const TakeTest = () => {
 };
 
 // --- Sub-component for Navigation List ---
-const SectionNavList = ({ test, answers, current, set, close }) => (
+const SectionNavList = ({ test, answers, markedForReview, current, set, close }) => (
     <div className="space-y-1">
         {test.sections.map((s, i) => {
             const solved = Object.values(answers[i] || {}).filter(v => v).length;
+            const marked = Object.values(markedForReview[i] || {}).filter(Boolean).length;
             const total = s.questions.length;
             const isDone = solved === total;
 
@@ -398,7 +465,15 @@ const SectionNavList = ({ test, answers, current, set, close }) => (
                             {s.sectionName}
                         </span>
                     </div>
-                    <span className="text-[10px] font-black text-zinc-400">{solved}/{total}</span>
+                    <div className="flex items-center gap-2">
+                        {marked > 0 && (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-black text-amber-600">
+                                <Bookmark className="h-3 w-3 fill-amber-500/20" />
+                                {marked}
+                            </span>
+                        )}
+                        <span className="text-[10px] font-black text-zinc-400">{solved}/{total}</span>
+                    </div>
                 </button>
             );
         })}

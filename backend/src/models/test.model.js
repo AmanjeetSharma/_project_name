@@ -7,6 +7,7 @@ const testQuestionSchema = new Schema(
     correctAnswer: { type: String, required: true },
 
     userAnswer: { type: String, default: null },
+    markedForReview: { type: Boolean, default: false },
     isCorrect: { type: Boolean, default: false }
   },
   { _id: false }
