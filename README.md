@@ -16,7 +16,7 @@
 | :--- | :--- |
 | Frontend | [https://college-finder-advisor.vercel.app](https://college-finder-advisor.vercel.app) |
 | Backend Server | [https://college-finder-advisor.onrender.com](https://college-finder-advisor.onrender.com) |
-| Model | [https://one-stop-personalized-career-education-h92r.onrender.com/recommend](https://one-stop-personalized-career-education-h92r.onrender.com/recommend) |
+| Model | [https://career-advisor-ml-api.onrender.com/recommend](https://career-advisor-ml-api.onrender.com/recommend) |
 
 ---
 
