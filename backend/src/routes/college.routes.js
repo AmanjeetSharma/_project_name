@@ -8,6 +8,7 @@ import {
     getFilters,
     getCollegeSuggestion,
 } from "../controllers/college.controller.js";
+import { verifyToken } from "../middlewares/auth.middleware.js";
 
 const router = express.Router();
 
@@ -21,16 +22,16 @@ router.get("/filters", getFilters);
 router.get("/:id", getCollegeById);
 
 // add new college
-router.post("/", addCollege);
+router.post("/", verifyToken, addCollege);
 
 // update college
-router.put("/:id", updateCollege);
+router.put("/:id", verifyToken, updateCollege);
 
 // delete college
-router.delete("/:id", deleteCollege);
+router.delete("/:id", verifyToken, deleteCollege);
 
 // get college suggestions based on test results and state
-router.post("/college-suggestion", getCollegeSuggestion);
+router.post("/college-suggestion", verifyToken, getCollegeSuggestion);
 
 
 export default router;

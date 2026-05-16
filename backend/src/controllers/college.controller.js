@@ -282,7 +282,7 @@ const getCollegeSuggestion = asyncHandler(async (req, res) => {
     try {
         await new Promise((resolve) => setTimeout(resolve, 1000));
         response = await axios.post(
-            "https://one-stop-personalized-career-education-h92r.onrender.com/recommend",
+            "https://career-advisor-ml-api.onrender.com/recommend",
             payload
         );
     } catch (err) {
